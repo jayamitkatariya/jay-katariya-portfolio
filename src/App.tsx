@@ -386,7 +386,7 @@ export default function App() {
               </h2>
               <div className="flex flex-col border-t border-[var(--border-primary)] relative">
                 {/* Timeline connector */}
-                <div className="absolute left-0 top-0 bottom-0 w-px bg-[var(--border-primary)] hidden md:block" />
+                <div className="absolute left-0 md:left-[-24px] top-0 bottom-0 w-px bg-[var(--border-primary)] hidden md:block" />
                 {currentWork.map((exp, i) => (
                   <motion.div
                     key={i}
@@ -423,7 +423,7 @@ export default function App() {
               </h2>
               <div className="flex flex-col border-t border-[var(--border-primary)] relative">
                 {/* Timeline connector */}
-                <div className="absolute left-0 top-0 bottom-0 w-px bg-[var(--border-primary)] hidden md:block" />
+                <div className="absolute left-0 md:left-[-24px] top-0 bottom-0 w-px bg-[var(--border-primary)] hidden md:block" />
                 {previousWork.map((exp, i) => (
                   <motion.div
                     key={i}

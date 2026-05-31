@@ -15,10 +15,23 @@ export const projects: Project[] = [
   },
   {
     type: "startup",
-    name: "workro hr",
-    description: "cofounded this b2b hr saas",
-    tags: ["web development", "startup", "hr"],
+    name: "workro desk",
+    description: "workspace management that doesn't suck",
+    tags: ["web development", "startup", "workspace"],
+    url: "https://desk.workro.in"
+  },
+  {
+    type: "startup",
+    name: "workro recruit",
+    description: "cofounded this b2b recruitment saas",
+    tags: ["web development", "startup", "recruiting"],
     url: "https://workrohr.com"
+  },
+  {
+    type: "startup",
+    name: "workro people",
+    description: "hr platform — launching soon",
+    tags: ["web development", "startup", "hr", "coming soon"]
   },
   {
     type: "consulting",
