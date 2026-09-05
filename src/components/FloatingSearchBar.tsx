@@ -253,7 +253,7 @@ export default function FloatingSearchBar({ isOpen, setIsOpen, onFirstMessage, o
 
   return (
     <>
-      {/* Backdrop — only when open */}
+      {/* Backdrop - only when open */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/5 backdrop-blur-[2px] z-40 transition-opacity duration-300"
@@ -261,7 +261,7 @@ export default function FloatingSearchBar({ isOpen, setIsOpen, onFirstMessage, o
         />
       )}
 
-      {/* FAB button — hidden when open */}
+      {/* FAB button - hidden when open */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -295,10 +295,10 @@ export default function FloatingSearchBar({ isOpen, setIsOpen, onFirstMessage, o
         </button>
       )}
 
-      {/* Chat panel — mobile: bottom sheet, desktop: floating panel */}
+      {/* Chat panel - mobile: bottom sheet, desktop: floating panel */}
       {isOpen && (
         <div className="fixed z-50 inset-x-0 bottom-0 sm:inset-auto sm:bottom-8 sm:right-6 md:right-12">
-          {/* Glow — desktop only (mobile is full-width, glow not needed) */}
+          {/* Glow - desktop only (mobile is full-width, glow not needed) */}
           <div className="hidden sm:block absolute -inset-[3px] bg-gradient-to-r from-[#4facfe] via-[#00f2fe] to-[#f093fb] blur-lg opacity-100 rounded-2xl animate-gradient-xy" />
           <div
             className="hidden sm:block absolute -inset-[3px] bg-gradient-to-l from-[#f5576c] via-[#f093fb] to-[#4facfe] blur-xl opacity-80 rounded-2xl animate-gradient-xy"

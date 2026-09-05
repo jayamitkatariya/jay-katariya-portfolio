@@ -38,9 +38,9 @@ const highlights = [
     bg: 'bg-amber-500/5',
     items: [
       'morgan business concept competition winner',
-      'tks unicorn scholar — top 70 of 9,000+',
+      'tks unicorn scholar, top 70 of 9,000+',
       '2 published research papers on SSRN',
-      'national cyber olympiad — top 0.02%',
+      'national cyber olympiad, top 0.02%',
     ],
   },
   {
@@ -157,7 +157,7 @@ export default function ResumePage() {
                 Jay_Katariya_Resume.pdf
               </p>
               <p className="font-mono text-[10px] sm:text-xs text-[var(--text-tertiary)] mt-0.5 tracking-wide">
-                PDF document — click to download
+                PDF document, click to download
               </p>
             </div>
             <Download className="w-5 h-5 text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)] transition-all duration-300 group-hover:-translate-y-0.5 shrink-0" />

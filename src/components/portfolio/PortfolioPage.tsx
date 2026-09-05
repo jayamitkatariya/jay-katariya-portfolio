@@ -33,7 +33,7 @@ export default function PortfolioPage() {
             portfolio
           </h1>
           <p className="font-mono text-xs sm:text-sm tracking-wider text-[var(--text-tertiary)]">
-            {projects.length} projects — startups, consulting, freelance & personal
+            {projects.length} projects. startups, consulting, freelance & personal
           </p>
         </motion.div>
 

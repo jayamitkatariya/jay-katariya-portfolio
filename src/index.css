@@ -146,7 +146,7 @@ body {
   background: var(--scrollbar-thumb-hover);
 }
 
-/* Custom cursor — hide default on desktop (only when custom cursor is active) */
+/* Custom cursor - hide default on desktop (only when custom cursor is active) */
 @media (hover: hover) and (pointer: fine) {
   html.custom-cursor-active * { cursor: none !important; }
 }

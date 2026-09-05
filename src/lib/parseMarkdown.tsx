@@ -5,7 +5,7 @@ import React from 'react';
  * Prevents partial **bold or *italic from rendering broken markup.
  */
 export function stripTrailingMarkdown(text: string): string {
-  // Don't strip inside code blocks — they render naturally during streaming
+  // Don't strip inside code blocks - they render naturally during streaming
   const fenceCount = (text.match(/```/g) || []).length;
   if (fenceCount % 2 === 1) return text; // unclosed code block, leave as-is
 

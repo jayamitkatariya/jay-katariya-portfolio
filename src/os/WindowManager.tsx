@@ -201,7 +201,7 @@ export function WindowManagerProvider({ children }: { children: React.ReactNode 
   const [state, dispatch] = useReducer(windowReducer, initialState);
 
   const openApp = useCallback((appId: AppId) => {
-    // Import from registry dynamically — we pass defaults inline here
+    // Import from registry dynamically - we pass defaults inline here
     // The actual PortfolioOS will use the registry
     dispatch({ type: 'OPEN_APP', appId, defaultSize: { width: 800, height: 520 }, minSize: { width: 480, height: 320 }, title: appId });
   }, []);

@@ -30,7 +30,7 @@ export const projects: Project[] = [
   {
     type: "startup",
     name: "workro people",
-    description: "hr platform — launching soon",
+    description: "hr platform, launching soon",
     tags: ["web development", "startup", "hr", "coming soon"]
   },
   {
@@ -42,7 +42,7 @@ export const projects: Project[] = [
   {
     type: "startup",
     name: "figur8",
-    description: "ranked 4th/2000 in a hackathon — ai consulting engine delivering mbb-level strategic analysis in hours, not months",
+    description: "ranked 4th/2000 in a hackathon. ai consulting engine delivering mbb-level strategic analysis in hours, not months",
     tags: ["ai/ml", "consulting", "startup", "strategy"]
   },
   {
@@ -74,21 +74,21 @@ export const projects: Project[] = [
   {
     type: "personal",
     name: "notabook.xyz",
-    description: "fck notion — project management tool built because nothing else cut it",
+    description: "fck notion. project management tool built because nothing else cut it",
     tags: ["react", "typescript", "tailwind", "vercel"],
     url: "https://notabook.xyz"
   },
   {
     type: "personal",
     name: "instasched",
-    description: "when2meet + calendly alternative — scheduling made simple and collaborative",
+    description: "when2meet + calendly alternative. scheduling made simple and collaborative",
     tags: ["react", "typescript", "scheduling", "collaboration"],
     url: "https://planout.me"
   },
   {
     type: "personal",
     name: "typeshit",
-    description: "rich text editor with word counter — made it coz i hate wordcounter.net",
+    description: "rich text editor with word counter. made it coz i hate wordcounter.net",
     tags: ["javascript", "html", "css", "rich text"],
     url: "https://typeshitt.vercel.app"
   }

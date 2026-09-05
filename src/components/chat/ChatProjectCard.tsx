@@ -25,7 +25,7 @@ export default function ChatProjectCard({ project, onClick }: ChatProjectCardPro
         {project.name}
       </div>
 
-      {/* Description — 2 lines max */}
+      {/* Description - 2 lines max */}
       <div className="text-xs text-[var(--text-secondary)] font-light leading-relaxed line-clamp-2 mb-2.5">
         {project.description}
       </div>

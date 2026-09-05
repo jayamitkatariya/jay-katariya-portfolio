@@ -45,7 +45,7 @@ function DesktopContent({ isDark, onToggleDark }: PortfolioOSProps) {
     <div
       className="h-[calc(100vh-48px)] sm:h-[calc(100vh-52px)] md:h-[calc(100vh-56px)] w-full relative overflow-hidden select-none mt-12 sm:mt-[52px] md:mt-14"
     >
-      {/* Wallpaper — same gradient as AI chatbot */}
+      {/* Wallpaper - same gradient as AI chatbot */}
       <div
         className="absolute inset-0 z-0"
         data-desktop="true"

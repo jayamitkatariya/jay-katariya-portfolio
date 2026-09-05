@@ -28,7 +28,7 @@ function arcPath(x1: number, y1: number, x2: number, y2: number): string {
   const dx = x2 - x1;
   const dy = y2 - y1;
   const dist = Math.sqrt(dx * dx + dy * dy);
-  // Arc curves upward — sweep radius proportional to distance
+  // Arc curves upward - sweep radius proportional to distance
   const sweep = dist * 0.4;
   const mx = (x1 + x2) / 2;
   const my = (y1 + y2) / 2 - sweep * 0.6;
@@ -38,7 +38,7 @@ function arcPath(x1: number, y1: number, x2: number, y2: number): string {
 // Home base for arcs (Pune)
 const HOME = LOCATIONS[0];
 
-// Continent outlines — equirectangular projection, viewBox 0 0 1000 500
+// Continent outlines - equirectangular projection, viewBox 0 0 1000 500
 const CONTINENT_PATHS = [
   "M42,56 L69,53 L119,56 L167,47 L194,50 L236,61 L264,75 L242,75 L264,97 L286,89 L306,83 L344,106 L353,117 L322,128 L314,125 L294,136 L289,147 L283,158 L278,175 L278,181 L269,169 L256,167 L250,169 L231,178 L231,189 L258,194 L253,203 L250,211 L208,200 L194,186 L167,156 L158,144 L158,117 L139,97 L89,83Z",
   "M306,39 L347,28 L403,25 L431,39 L414,56 L375,69 L342,56Z",

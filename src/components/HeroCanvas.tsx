@@ -183,7 +183,7 @@ export default function HeroCanvas({ isDark = false }: { isDark?: boolean }) {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
       animate();
 
-      // Load all images locally — skip any that fail
+      // Load all images locally - skip any that fail
       Promise.all(
         IMAGE_CONFIGS.map(config => {
           return new Promise<{ img: HTMLImageElement; invert: boolean } | null>((resolve) => {

@@ -356,7 +356,7 @@ export default function MemoriesPage() {
         className="flex-1 min-h-0 px-2 sm:px-3 md:px-5 lg:px-8 pb-2 sm:pb-3 md:pb-4"
       >
         <div className="relative h-full max-w-[1400px] mx-auto group/frame">
-          {/* Ambient glow — dual layer */}
+          {/* Ambient glow - dual layer */}
           <div className="absolute -inset-1 sm:-inset-1.5 bg-gradient-to-r from-[#4facfe] via-[#00f2fe] to-[#f093fb] rounded-2xl sm:rounded-3xl blur-xl opacity-20 group-hover/frame:opacity-35 transition-opacity duration-700 animate-gradient-xy pointer-events-none" />
           <div
             className="absolute -inset-1 sm:-inset-1.5 bg-gradient-to-l from-[#f5576c] via-[#f093fb] to-[#4facfe] rounded-2xl sm:rounded-3xl blur-2xl opacity-10 group-hover/frame:opacity-20 transition-opacity duration-700 animate-gradient-xy pointer-events-none"

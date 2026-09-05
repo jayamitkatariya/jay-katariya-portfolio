@@ -33,7 +33,7 @@ const currentWork = [
   {
     company: "workro",
     role: "cofounder and ceo",
-    description: "building workro — an ai-native people platform backed by infinity automated solutions. shipped workro desk, workro recruit, and workro people (launching soon). beta is done. 20+ companies onboarded. out of beta and growing fast."
+    description: "building workro, an ai-native people platform backed by infinity automated solutions. shipped workro desk, workro recruit, and workro people (launching soon). beta is done. 20+ companies onboarded. out of beta and growing fast."
   },
   {
     company: "infinity automated solutions pvt. ltd.",
@@ -48,7 +48,7 @@ const currentWork = [
   {
     company: "random ass projects",
     role: "creator",
-    description: "built tools i wished existed — notabook.xyz, typeshitt.vercel.app, planout.me, and more."
+    description: "built tools i wished existed. notabook.xyz, typeshitt.vercel.app, planout.me, and more."
   },
   {
     company: "purdue university",
@@ -185,7 +185,7 @@ export default function App() {
   const scrollSection = useScrollSection(currentPage === 'home');
   const hasInteractedWithChat = useRef(false);
 
-  // Chat action handler — site control from chat
+  // Chat action handler - site control from chat
   const handleChatAction = useCallback((action: string) => {
     if (action === 'toggleDarkMode') {
       toggleDarkMode();
@@ -317,7 +317,7 @@ export default function App() {
               <div className="font-mono text-[9px] sm:text-[10px] md:text-xs lg:text-sm tracking-[0.2em] sm:tracking-[0.3em] uppercase text-[var(--text-secondary)] font-medium mb-4 sm:mb-5 min-h-[1.5em]">
                 <TypewriterText
                   texts={[
-                    `${getGreeting()} — integrated business & engineering, minor in psychology @ purdue`,
+                    `${getGreeting()}, integrated business & engineering, minor in psychology @ purdue`,
                     'building things from first principles',
                     'entrepreneur, engineer, and perpetual student',
                     'currently building workro and planning world domination',
@@ -384,9 +384,7 @@ export default function App() {
               <h2 className="text-xl sm:text-2xl font-medium tracking-tight text-blue-500 mb-4 sm:mb-5 md:mb-6">
                 <TextScramble text="what i'm up to" />
               </h2>
-              <div className="flex flex-col border-t border-[var(--border-primary)] relative">
-                {/* Timeline connector */}
-                <div className="absolute left-0 md:left-[-24px] top-0 bottom-0 w-px bg-[var(--border-primary)] hidden md:block" />
+              <div className="flex flex-col border-t border-[var(--border-primary)]">
                 {currentWork.map((exp, i) => (
                   <motion.div
                     key={i}
@@ -400,8 +398,6 @@ export default function App() {
                       hoveredExp !== null && hoveredExp !== i ? 'opacity-40' : 'opacity-100'
                     } ${hoveredExp === i ? 'bg-[var(--bg-secondary)]/80' : ''}`}
                   >
-                    {/* Timeline dot */}
-                    <div className="absolute left-[-5px] top-1/2 -translate-y-1/2 w-[9px] h-[9px] rounded-full bg-blue-500/30 border border-blue-500/50 hidden md:block transition-all duration-300 group-hover:scale-150 group-hover:bg-blue-500/60" />
                     {/* Left border glow on hover */}
                     <div className="absolute left-0 top-2 bottom-2 w-[2px] bg-blue-500/0 rounded-full transition-all duration-300 group-hover:bg-blue-500/40" />
                     <div className="md:col-span-4 flex flex-col gap-1 sm:gap-2 transition-transform duration-300 group-hover:translate-x-2">
@@ -421,9 +417,7 @@ export default function App() {
               <h2 className="text-xl sm:text-2xl font-medium tracking-tight text-red-500 mb-4 sm:mb-5 md:mb-6">
                 <TextScramble text="previously" />
               </h2>
-              <div className="flex flex-col border-t border-[var(--border-primary)] relative">
-                {/* Timeline connector */}
-                <div className="absolute left-0 md:left-[-24px] top-0 bottom-0 w-px bg-[var(--border-primary)] hidden md:block" />
+              <div className="flex flex-col border-t border-[var(--border-primary)]">
                 {previousWork.map((exp, i) => (
                   <motion.div
                     key={i}
@@ -437,8 +431,6 @@ export default function App() {
                       hoveredPrev !== null && hoveredPrev !== i ? 'opacity-40' : 'opacity-100'
                     } ${hoveredPrev === i ? 'bg-[var(--bg-secondary)]/80' : ''}`}
                   >
-                    {/* Timeline dot */}
-                    <div className="absolute left-[-5px] top-1/2 -translate-y-1/2 w-[9px] h-[9px] rounded-full bg-red-500/30 border border-red-500/50 hidden md:block transition-all duration-300 group-hover:scale-150 group-hover:bg-red-500/60" />
                     {/* Left border glow on hover */}
                     <div className="absolute left-0 top-2 bottom-2 w-[2px] bg-red-500/0 rounded-full transition-all duration-300 group-hover:bg-red-500/40" />
                     <div className="md:col-span-4 flex flex-col gap-1 sm:gap-2 transition-transform duration-300 group-hover:translate-x-2">

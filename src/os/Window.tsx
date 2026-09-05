@@ -31,7 +31,7 @@ export default function Window({ windowState, children }: WindowProps) {
     }
   }, [dispatch, windowState.id, isActive]);
 
-  // Title bar drag — uses refs to avoid stale closures
+  // Title bar drag - uses refs to avoid stale closures
   const handleTitleBarPointerDown = useCallback((e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest('[data-traffic-light]')) return;
     e.preventDefault();
