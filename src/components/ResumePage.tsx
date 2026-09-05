@@ -13,7 +13,7 @@ const highlights = [
     items: [
       'co-founder & ceo @ workro',
       'senior advisory board @ purduethink',
-      'corporate strategy intern @ infinity',
+      'corporate strategy & ops intern @ infinity (2nd summer · deal team)',
       'possibilities summit @ goldman sachs',
     ],
   },
@@ -41,6 +41,8 @@ const highlights = [
       'tks unicorn scholar, top 70 of 9,000+',
       '2 published research papers on SSRN',
       'national cyber olympiad, top 0.02%',
+      'dartmouth cid alumni scholar, $1,000',
+      'purdue venturex2 grant, $5,000',
     ],
   },
   {
@@ -54,6 +56,7 @@ const highlights = [
       'python, node.js, postgresql',
       'rest apis, html/css',
       'excel, matlab, fusion 360',
+      'hermes agent',
     ],
   },
 ];
