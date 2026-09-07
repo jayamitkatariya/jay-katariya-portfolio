@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, Award, Medal, BookOpen, Globe, Zap, Crown } from 'lucide-react';
+import { Trophy, Award, Medal, BookOpen, Globe, Zap, Crown, GraduationCap, Sparkles } from 'lucide-react';
 import WorldMap from './components/WorldMap';
 import HeroCanvas from './components/HeroCanvas';
 import FloatingSearchBar from './components/FloatingSearchBar';
@@ -33,12 +33,12 @@ const currentWork = [
   {
     company: "workro",
     role: "cofounder and ceo",
-    description: "building workro, an ai-native people platform backed by infinity automated solutions. shipped workro desk, workro recruit, and workro people (launching soon). beta is done. 20+ companies onboarded. out of beta and growing fast."
+    description: "building workro, an ai-native people platform backed by infinity automated solutions. workro desk and workro recruit are live with 100+ companies onboarded. more products in the pipeline."
   },
   {
     company: "infinity automated solutions pvt. ltd.",
-    role: "corporate strategy & operations intern",
-    description: "international market assessments, M&A valuation and financial modeling, and operational workflow optimization. also built and launched infinitysols.com from scratch."
+    role: "corporate strategy & ops intern (2nd summer)",
+    description: "ran audits across every department and built systems to improve efficiencies. on the deal team negotiating a full sales deal with dollar general. previously: international market assessments, M&A valuation and financial modeling. also built infinitysols.com from scratch."
   },
   {
     company: "purduethink",
@@ -80,7 +80,7 @@ const previousWork = [
   },
 ];
 
-const skills = ["javascript", "react", "react native", "html/css", "python", "node.js", "postgresql", "rest apis", "excel", "matlab", "fusion 360"];
+const skills = ["javascript", "react", "react native", "html/css", "python", "node.js", "postgresql", "rest apis", "excel", "matlab", "fusion 360", "hermes agent"];
 const languages = ["english", "hindi", "marathi", "marwari", "sanskrit"];
 const interests = ["premier league", "subway surfers", "coding", "pizza", "swimming", "soccer", "tv shows", "leg days", "robotics", "standup comedy"];
 
@@ -92,6 +92,8 @@ const recognition = [
   { title: "published researcher", detail: "2 papers on SSRN (laser physics, pollutant removal)", icon: BookOpen },
   { title: "un recognition", detail: "refugee awareness campaign", icon: Globe },
   { title: "national cyber olympiad", detail: "top 0.02% among 5 million students", icon: Zap },
+  { title: "dartmouth cid alumni", detail: "$1K scholarship, creativity + innovation + design program", icon: GraduationCap },
+  { title: "purdue venturex2", detail: "$5K grant", icon: Sparkles },
   { title: "state-level football", detail: "silver medal, u-16", icon: Medal },
 ];
 
