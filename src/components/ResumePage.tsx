@@ -11,7 +11,7 @@ const highlights = [
     border: 'border-blue-500/20',
     bg: 'bg-blue-500/5',
     items: [
-      'co-founder & ceo @ workro',
+      'co-founder & ceo @ workro — desk + recruit live, 100+ companies',
       'senior advisory board @ purduethink',
       'corporate strategy & ops intern @ infinity (2nd summer · deal team)',
       'possibilities summit @ goldman sachs',
