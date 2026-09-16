@@ -48,7 +48,7 @@ const currentWork = [
   {
     company: "random ass projects",
     role: "creator",
-    description: "built tools i wished existed. notabook.xyz, typeshitt.vercel.app, planout.me, and more."
+    description: "built tools i wished existed. cue, bucket, localmind, clickyyy, persona cli, mote, and more."
   },
   {
     company: "purdue university",

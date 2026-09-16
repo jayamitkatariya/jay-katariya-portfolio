@@ -40,30 +40,11 @@ export const projects: Project[] = [
     tags: ["strategy", "data analytics", "recruiting", "marketing"]
   },
   {
-    type: "startup",
-    name: "figur8",
-    description: "ranked 4th/2000 in a hackathon. ai consulting engine delivering mbb-level strategic analysis in hours, not months",
-    tags: ["ai/ml", "consulting", "startup", "strategy"]
-  },
-  {
     type: "freelance",
     name: "infinitysols.com",
     description: "built the website for infinity automated solutions",
     tags: ["web development", "freelance", "client work"],
     url: "https://infinitysols.com"
-  },
-  {
-    type: "personal",
-    name: "planout.me",
-    description: "your thoughts, captured & organized. ai companion that turns voice or text in any language into beautiful notes",
-    tags: ["ai/ml", "react", "typescript", "notes"],
-    url: "https://planout.me"
-  },
-  {
-    type: "consulting",
-    name: "careshub",
-    description: "short, mid, and long-term strategic planning engagement",
-    tags: ["strategy", "consulting", "business planning"]
   },
   {
     type: "consulting",
@@ -80,16 +61,51 @@ export const projects: Project[] = [
   },
   {
     type: "personal",
-    name: "instasched",
-    description: "when2meet + calendly alternative. scheduling made simple and collaborative",
-    tags: ["react", "typescript", "scheduling", "collaboration"],
-    url: "https://planout.me"
+    name: "clickyyy",
+    description: "shake your cursor to summon an ai agent that sees your screen and clicks, types, and acts for you",
+    tags: ["macos", "electron", "ai agent", "typescript", "open source"],
+    url: "https://github.com/jayamitkatariya/clickyyy"
   },
   {
     type: "personal",
-    name: "typeshit",
-    description: "rich text editor with word counter. made it coz i hate wordcounter.net",
-    tags: ["javascript", "html", "css", "rich text"],
-    url: "https://typeshitt.vercel.app"
+    name: "cue",
+    description: "ask your screen anything. ⌥c drops a glass overlay with your screen attached and any vision model answers back",
+    tags: ["macos", "tauri", "rust", "ai", "open source"],
+    url: "https://github.com/jayamitkatariya/cue"
+  },
+  {
+    type: "personal",
+    name: "localmind",
+    description: "bring-your-own-key ai chat that stays on your machine. live web search, file attachments, local tools",
+    tags: ["tauri", "react", "typescript", "llm", "open source"],
+    url: "https://github.com/jayamitkatariya/localmind"
+  },
+  {
+    type: "personal",
+    name: "bucket",
+    description: "your clipboard, living in the notch. ocr, background removal, moodboards — all local",
+    tags: ["macos", "swift", "swiftui", "clipboard", "open source"],
+    url: "https://github.com/jayamitkatariya/bucket"
+  },
+  {
+    type: "personal",
+    name: "persona cli",
+    description: "notes, tasks, and an ai that knows your files. one folder of plain markdown, no cloud",
+    tags: ["node.js", "typescript", "cli", "markdown", "local-first"],
+    url: "https://github.com/jayamitkatariya/personacli"
+  },
+  {
+    type: "personal",
+    name: "mote",
+    description: "shake-to-write overlay notepad for macos. scribble on your screen, vanish when you're done",
+    tags: ["macos", "tauri", "rust", "notes", "open source"],
+    url: "https://github.com/jayamitkatariya/mote"
+  },
+  {
+    type: "personal",
+    name: "brewed",
+    description: "closed-source ios dating app. dating with intention — live on the app store",
+    tags: ["ios", "expo", "react native", "supabase", "closed source"],
+    url: "https://apps.apple.com/us/app/brewed-dating/id6791085244"
   }
 ];
