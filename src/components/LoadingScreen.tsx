@@ -3,8 +3,8 @@ import { motion } from 'motion/react';
 
 const GREETINGS = ['namaste', 'hola', 'bonjour', 'ciao', 'olá', 'konnichiwa', 'salaam', 'ni hao'];
 const CHARS = 'abcdefghijklmnopqrstuvwxyz';
-const WORD_MS = 280;
-const SETTLE_MS = 120;
+const WORD_MS = 260;
+const SETTLE_MS = 100;
 const TOTAL_MS = GREETINGS.length * WORD_MS + SETTLE_MS;
 
 function scramble(length: number): string {
@@ -35,14 +35,22 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
     }
 
     let raf = 0;
-    const start = performance.now();
+    let startTime: number | null = null;
 
     const tick = (now: number) => {
-      const elapsed = now - start;
-      const idx = Math.min(Math.floor(elapsed / WORD_MS), GREETINGS.length - 1);
+      if (startTime === null) startTime = now;
+      const elapsed = Math.max(0, now - startTime);
+      const idx = Math.min(Math.max(Math.floor(elapsed / WORD_MS), 0), GREETINGS.length - 1);
       const word = GREETINGS[idx];
-      const progress = (elapsed - idx * WORD_MS) / WORD_MS;
-      const revealed = Math.floor(Math.min(progress / 0.75, 1) * word.length);
+      const progress = Math.max(0, (elapsed - idx * WORD_MS) / WORD_MS);
+      const revealed = Math.floor(Math.min(progress / 0.7, 1) * word.length);
+
+      if (elapsed >= TOTAL_MS) {
+        setDisplay(GREETINGS[GREETINGS.length - 1]);
+        setWordIndex(GREETINGS.length - 1);
+        finish();
+        return;
+      }
 
       let out = '';
       for (let i = 0; i < word.length; i++) {
@@ -55,19 +63,19 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
         }
       }
 
-      if (elapsed >= TOTAL_MS) {
-        setDisplay(word);
-        finish();
-        return;
-      }
-
       setDisplay(out);
       setWordIndex(idx);
       raf = requestAnimationFrame(tick);
     };
 
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    // safety net: finish even if rAF stalls (hidden tab, throttling)
+    const fallback = setTimeout(finish, TOTAL_MS + 400);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(fallback);
+    };
   }, [finish]);
 
   return (
