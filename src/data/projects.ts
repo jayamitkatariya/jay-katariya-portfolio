@@ -34,6 +34,12 @@ export const projects: Project[] = [
     tags: ["strategy", "data analytics", "recruiting", "marketing"]
   },
   {
+    type: "consulting",
+    name: "careshub",
+    description: "led a $500k project to establish a mental health services clinic at purdue for engineering students",
+    tags: ["consulting", "strategy", "mental health", "purdue"]
+  },
+  {
     type: "freelance",
     name: "infinitysols.com",
     description: "built the website for infinity automated solutions",

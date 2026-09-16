@@ -19,6 +19,7 @@ const TOPIC_PATTERNS: [RegExp, string][] = [
   [/project/i, 'projects overview'],
   [/skill|tech|code|python|javascript/i, 'technical skills'],
   [/united\s*airlines/i, 'united airlines'],
+  [/careshub|cares hub/i, 'careshub'],
   [/interest|hobby|hobbies/i, 'interests'],
   [/purdue|university|college/i, 'education'],
   [/clickyyy/i, 'clickyyy'],
