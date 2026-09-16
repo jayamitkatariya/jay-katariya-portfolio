@@ -28,12 +28,6 @@ export const projects: Project[] = [
     url: "https://workrohr.com"
   },
   {
-    type: "startup",
-    name: "workro people",
-    description: "hr platform, launching soon",
-    tags: ["web development", "startup", "hr", "coming soon"]
-  },
-  {
     type: "consulting",
     name: "united airlines",
     description: "led a team of five to improve recruiting pipelines, enhance MileagePlus marketing, and drive data-driven strategy",
@@ -45,19 +39,6 @@ export const projects: Project[] = [
     description: "built the website for infinity automated solutions",
     tags: ["web development", "freelance", "client work"],
     url: "https://infinitysols.com"
-  },
-  {
-    type: "consulting",
-    name: "psg consulting",
-    description: "improved transparency between the student body, student government, and senate at purdue",
-    tags: ["consulting", "strategy", "student government"]
-  },
-  {
-    type: "personal",
-    name: "notabook.xyz",
-    description: "fck notion. project management tool built because nothing else cut it",
-    tags: ["react", "typescript", "tailwind", "vercel"],
-    url: "https://notabook.xyz"
   },
   {
     type: "personal",

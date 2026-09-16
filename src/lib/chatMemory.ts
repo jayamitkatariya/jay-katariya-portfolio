@@ -10,7 +10,6 @@ export interface ChatMemory {
 const STORAGE_KEY = 'jay-chat-memory';
 
 const TOPIC_PATTERNS: [RegExp, string][] = [
-  [/notabook/i, 'notabook.xyz'],
   [/mindcord/i, 'mindcord'],
   [/workro/i, 'workro'],
   [/goldman/i, 'goldman sachs'],
