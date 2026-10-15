@@ -29,29 +29,8 @@ const LOCATIONS: MapLocation[] = [
   { name: 'cincinnati', context: 'traveled', lat: 39.1, lng: -84.51, color: '#22d3ee', category: 'visited', region: 'us' },
 ];
 
-// One long-haul route per region lands on its hub; the rest of the region hangs off the hub.
-// Twelve arcs fanning out of Pune stacked into a smear over the US and Europe.
-const HUBS: Record<Exclude<Region, 'home'>, string> = {
-  us: 'west lafayette',
-  europe: 'switzerland',
-  singapore: 'singapore',
-  mauritius: 'mauritius',
-};
-
 function toXY(lat: number, lng: number): [number, number] {
   return [(lng + 180) / 360 * 1000, (90 - lat) / 180 * 500];
-}
-
-// Quadratic arc that bows away from the chord, always toward the north side
-function arcPath([x1, y1]: [number, number], [x2, y2]: [number, number], bend = 0.22): string {
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const d = Math.hypot(dx, dy) || 1;
-  let nx = dy / d;
-  let ny = -dx / d;
-  if (ny > 0 || (ny === 0 && nx > 0)) { nx = -nx; ny = -ny; }
-  const k = d * bend;
-  return `M${x1} ${y1}Q${(x1 + x2) / 2 + nx * k} ${(y1 + y2) / 2 + ny * k} ${x2} ${y2}`;
 }
 
 // Land as a dot grid, sampled from Natural Earth 1:50m (lat > -58°) on a 6-unit grid in the
@@ -97,15 +76,8 @@ const CATEGORY_META: Record<string, { label: string; icon: string; color: string
 
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
 
-// Arcs draw in when the map scrolls into view, then a short pulse rides each one outward.
+// Land fades in when the map scrolls into view, then pins pop in one after another.
 const MAP_CSS = `
-.wm-route{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.3s cubic-bezier(.65,0,.35,1)}
-.wm-on .wm-route{stroke-dashoffset:0}
-.wm-hop{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .5s cubic-bezier(.65,0,.35,1)}
-.wm-hop.is-on{stroke-dashoffset:0}
-.wm-comet{stroke-dasharray:.06 2;stroke-dashoffset:.06;opacity:0}
-.wm-on .wm-comet{animation:wm-comet 6s cubic-bezier(.45,0,.55,1) infinite}
-@keyframes wm-comet{0%{stroke-dashoffset:.06;opacity:0}4%{opacity:1}36%{opacity:1}40%,100%{stroke-dashoffset:-1;opacity:0}}
 .wm-pin{transform:scale(0);transform-box:fill-box;transform-origin:center;transition:transform .55s cubic-bezier(.34,1.56,.64,1) var(--d,0s)}
 .wm-on .wm-pin{transform:scale(1)}
 .wm-pulse{opacity:0;transform-box:fill-box;transform-origin:center}
@@ -168,41 +140,15 @@ export default function WorldMap({ isDark }: { isDark?: boolean }) {
     []
   );
   const byName = useMemo(() => new Map(locationCoords.map(l => [l.name, l])), [locationCoords]);
-  const home = locationCoords[0];
 
-  const routes = useMemo(() =>
-    (Object.keys(HUBS) as (keyof typeof HUBS)[]).map(region => {
-      const hub = byName.get(HUBS[region])!;
-      return { region, hub, path: arcPath(home.xy, hub.xy) };
-    }),
-    [byName, home]
+  // Pins land in order, home first
+  const pinDelay = useMemo(() =>
+    new Map(locationCoords.map((l, i) => [l.name, 0.3 + i * 0.08])),
+    [locationCoords]
   );
-
-  const hops = useMemo(() =>
-    locationCoords
-      .filter(l => l.region !== 'home' && HUBS[l.region as keyof typeof HUBS] !== l.name)
-      .map(l => {
-        const hub = byName.get(HUBS[l.region as keyof typeof HUBS])!;
-        return { name: l.name, region: l.region, color: l.color, path: arcPath(hub.xy, l.xy, 0.3) };
-      }),
-    [locationCoords, byName]
-  );
-
-  // Pins land in order: home, then each hub as its route arrives, then that hub's neighbours
-  const pinDelay = useMemo(() => {
-    const m = new Map<string, number>([[home.name, 0.1]]);
-    routes.forEach((r, i) => {
-      const arrive = 0.35 + i * 0.22 + 1.1;
-      m.set(r.hub.name, arrive);
-      locationCoords
-        .filter(l => l.region === r.region && l.name !== r.hub.name)
-        .forEach((l, j) => m.set(l.name, arrive + 0.15 + j * 0.07));
-    });
-    return m;
-  }, [routes, locationCoords, home]);
 
   const hoveredLoc = hovered ? byName.get(hovered) : undefined;
-  // hovering home lights every route; hovering anywhere else lights just its region
+  // hovering home lights every place; hovering anywhere else lights just its region
   const activeRegion: Region | null = hoveredLoc ? hoveredLoc.region : null;
   const regionLit = (r: Region) => activeRegion === null || activeRegion === 'home' || activeRegion === r;
 
@@ -284,24 +230,6 @@ export default function WorldMap({ isDark }: { isDark?: boolean }) {
               <stop offset="100%" stopColor={palette.oceanGradEnd} />
             </radialGradient>
 
-            {/* each route fades from home amber into its destination's colour */}
-            {routes.map(r => (
-              <linearGradient
-                key={r.region}
-                id={`route-${r.region}`}
-                gradientUnits="userSpaceOnUse"
-                x1={home.xy[0]} y1={home.xy[1]} x2={r.hub.xy[0]} y2={r.hub.xy[1]}
-              >
-                <stop offset="0%" stopColor={home.color} />
-                <stop offset="100%" stopColor={r.hub.color} />
-              </linearGradient>
-            ))}
-
-            {/* soft halo behind lit routes and the travelling pulse */}
-            <filter id="wm-soft" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2.2" />
-            </filter>
-
             <filter id="glow-marker" x="-150%" y="-150%" width="400%" height="400%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
               <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
@@ -323,85 +251,6 @@ export default function WorldMap({ isDark }: { isDark?: boolean }) {
             strokeWidth={2.4}
             strokeLinecap="round"
           />
-
-          {/* Long-haul routes: one per region */}
-          {routes.map((r, i) => {
-            const lit = regionLit(r.region);
-            const focused = activeRegion !== null && lit;
-            return (
-              <g
-                key={r.region}
-                style={{
-                  opacity: lit ? 1 : 0.18,
-                  transition: 'opacity 0.35s ease',
-                }}
-              >
-                {/* glow underlay, only while the region is focused */}
-                <path
-                  d={r.path}
-                  fill="none"
-                  stroke={`url(#route-${r.region})`}
-                  strokeWidth={4}
-                  strokeLinecap="round"
-                  filter="url(#wm-soft)"
-                  style={{ opacity: focused ? 0.55 : 0, transition: 'opacity 0.35s ease' }}
-                />
-                <path
-                  className="wm-route"
-                  pathLength={1}
-                  d={r.path}
-                  fill="none"
-                  stroke={`url(#route-${r.region})`}
-                  strokeWidth={focused ? 1.6 : 1.1}
-                  strokeLinecap="round"
-                  style={{
-                    opacity: focused ? 0.95 : 0.55,
-                    transitionDelay: `${0.35 + i * 0.22}s`,
-                  }}
-                />
-                {!still && (
-                  <>
-                    <path
-                      className="wm-comet"
-                      pathLength={1}
-                      d={r.path}
-                      fill="none"
-                      stroke={r.hub.color}
-                      strokeWidth={5}
-                      strokeLinecap="round"
-                      filter="url(#wm-soft)"
-                      style={{ animationDelay: `${2.2 + i * 1.5}s` }}
-                    />
-                    <path
-                      className="wm-comet"
-                      pathLength={1}
-                      d={r.path}
-                      fill="none"
-                      stroke="#fff"
-                      strokeWidth={1.4}
-                      strokeLinecap="round"
-                      style={{ animationDelay: `${2.2 + i * 1.5}s` }}
-                    />
-                  </>
-                )}
-              </g>
-            );
-          })}
-
-          {/* Local hops inside a region, drawn only while that region is focused */}
-          {hops.map(h => (
-            <path
-              key={h.name}
-              className={`wm-hop${activeRegion === h.region ? ' is-on' : ''}`}
-              pathLength={1}
-              d={h.path}
-              fill="none"
-              stroke={h.color}
-              strokeWidth={0.9}
-              strokeLinecap="round"
-              opacity={0.65}
-            />
-          ))}
 
           {/* Location markers */}
           {locationCoords.map((loc) => {
