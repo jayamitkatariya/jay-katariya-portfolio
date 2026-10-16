@@ -14,15 +14,20 @@ export default function AchievementToast({ achievement, onDismiss }: Achievement
     return () => clearTimeout(timer);
   }, [achievement, onDismiss]);
 
+  // the live region stays mounted so screen readers announce each unlock
   return (
+    <div role="status" aria-live="polite">
     <AnimatePresence>
       {achievement && (
         <motion.div
+          // keyed: a queued unlock animates in on its own instead of swapping text in place
+          key={achievement.id}
           initial={{ opacity: 0, y: 80, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          className="fixed bottom-20 left-1/2 -translate-x-1/2 sm:bottom-24 z-[70] pointer-events-auto"
+          className="fixed inset-x-4 mx-auto w-fit max-w-sm bottom-[calc(5rem+env(safe-area-inset-bottom))] sm:bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[110] pointer-events-auto cursor-pointer"
+          onClick={onDismiss}
         >
           <div className="flex items-center gap-3 bg-[var(--text-primary)] text-[var(--bg-primary)] rounded-xl px-4 py-3 shadow-2xl border border-[var(--border-primary)]">
             <span className="text-lg">{achievement.icon}</span>
@@ -37,5 +42,6 @@ export default function AchievementToast({ achievement, onDismiss }: Achievement
         </motion.div>
       )}
     </AnimatePresence>
+    </div>
   );
 }

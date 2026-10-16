@@ -1,141 +1,104 @@
 import { useEffect, useRef, useState } from 'react';
 
+// Same gate as the `cursor: none` rule in index.css, so the two never disagree.
+// A touchscreen laptop with a mouse still gets the custom cursor.
+const FINE_POINTER = '(hover: hover) and (pointer: fine)';
+const hasFinePointer = () => typeof window !== 'undefined' && window.matchMedia(FINE_POINTER).matches;
+
+// Dot + trailing ring. The loop only runs while the ring is catching up to the
+// pointer, then sleeps until the next mousemove.
 export default function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [visible, setVisible] = useState(false);
-  const stateRef = useRef({ mouseX: 0, mouseY: 0, ringX: 0, ringY: 0, hovering: false, clicking: false, prevX: 0, prevY: 0 });
+  const [enabled, setEnabled] = useState(hasFinePointer);
+
+  // input can change under us (iPad + trackpad, tablet mode)
+  useEffect(() => {
+    const mq = window.matchMedia(FINE_POINTER);
+    const onChange = () => setEnabled(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    // Don't render on touch devices
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return;
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    // Add class to html so CSS knows custom cursor is active
-    document.documentElement.classList.add('custom-cursor-active');
-
+    if (!enabled) return;
     const dot = dotRef.current;
     const ring = ringRef.current;
-    const canvas = canvasRef.current;
-    if (!dot || !ring || !canvas) return;
+    if (!dot || !ring) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    document.documentElement.classList.add('custom-cursor-active');
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const s = { mouseX: -100, mouseY: -100, ringX: -100, ringY: -100, hovering: false, clicking: false, shown: false };
+    let frameId = 0;
+    let running = false;
 
-    const s = stateRef.current;
-    const particles: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number }[] = [];
+    const frame = () => {
+      dot.style.transform = `translate(${s.mouseX - 3}px, ${s.mouseY - 3}px)`;
+      s.ringX += (s.mouseX - s.ringX) * 0.15;
+      s.ringY += (s.mouseY - s.ringY) * 0.15;
+      const size = s.clicking ? 20 : s.hovering ? 48 : 32;
+      ring.style.width = ring.style.height = `${size}px`;
+      ring.style.transform = `translate(${s.ringX - size / 2}px, ${s.ringY - size / 2}px)`;
+      ring.style.borderWidth = s.hovering ? '1.5px' : '1px';
+
+      if (Math.abs(s.mouseX - s.ringX) + Math.abs(s.mouseY - s.ringY) < 0.3) {
+        running = false;
+        return;
+      }
+      frameId = requestAnimationFrame(frame);
+    };
+    const wake = () => {
+      if (running) return;
+      running = true;
+      frameId = requestAnimationFrame(frame);
+    };
+
+    const show = (v: boolean) => {
+      if (s.shown === v) return;
+      s.shown = v;
+      setVisible(v);
+    };
 
     const handleMove = (e: MouseEvent) => {
       s.mouseX = e.clientX;
       s.mouseY = e.clientY;
-      if (!visible) setVisible(true);
-
-      const target = e.target as HTMLElement;
-      s.hovering = !!target.closest('a, button, [role="button"], input, textarea, select, [data-cursor-hover]');
+      s.hovering = !!(e.target as HTMLElement).closest?.('a, button, [role="button"], input, textarea, select, [data-cursor-hover]');
+      show(true);
+      wake();
     };
+    const handleDown = () => { s.clicking = true; wake(); };
+    const handleUp = () => { s.clicking = false; wake(); };
+    const handleLeave = () => show(false);
 
-    const handleDown = () => { s.clicking = true; };
-    const handleUp = () => { s.clicking = false; };
-    const handleLeave = () => setVisible(false);
-    const handleEnter = () => setVisible(true);
-    const handleResize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-
-    let frameId: number;
-
-    const animate = () => {
-      // Dot follows exactly
-      dot.style.transform = `translate(${s.mouseX - 3}px, ${s.mouseY - 3}px)`;
-
-      // Ring follows with spring
-      s.ringX += (s.mouseX - s.ringX) * 0.15;
-      s.ringY += (s.mouseY - s.ringY) * 0.15;
-      const ringSize = s.clicking ? 20 : s.hovering ? 48 : 32;
-      ring.style.width = ring.style.height = `${ringSize}px`;
-      ring.style.transform = `translate(${s.ringX - ringSize / 2}px, ${s.ringY - ringSize / 2}px)`;
-      ring.style.borderWidth = s.hovering ? '1.5px' : '1px';
-
-      // Spawn particles on fast movement (skip if reduced motion preferred)
-      if (!prefersReducedMotion) {
-        const speed = Math.sqrt((s.mouseX - s.prevX) ** 2 + (s.mouseY - s.prevY) ** 2);
-        if (speed > 15 && particles.length < 30) {
-          particles.push({
-            x: s.mouseX,
-            y: s.mouseY,
-            vx: (Math.random() - 0.5) * 1.5,
-            vy: (Math.random() - 0.5) * 1.5,
-            life: 1,
-            maxLife: 0.4 + Math.random() * 0.3,
-          });
-        }
-      }
-      s.prevX = s.mouseX;
-      s.prevY = s.mouseY;
-
-      // Draw particles
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const isDark = document.documentElement.classList.contains('dark');
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 0.02;
-        if (p.life <= 0) {
-          particles.splice(i, 1);
-          continue;
-        }
-        const alpha = Math.max(0, p.life / p.maxLife) * 0.4;
-        const size = 2 * (p.life / p.maxLife);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
-        ctx.fillStyle = isDark ? `rgba(245,245,245,${alpha})` : `rgba(17,17,17,${alpha})`;
-        ctx.fill();
-      }
-
-      frameId = requestAnimationFrame(animate);
-    };
-
-    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mousemove', handleMove, { passive: true });
     window.addEventListener('mousedown', handleDown);
     window.addEventListener('mouseup', handleUp);
-    document.addEventListener('mouseleave', handleLeave);
-    document.addEventListener('mouseenter', handleEnter);
-    window.addEventListener('resize', handleResize);
-    frameId = requestAnimationFrame(animate);
+    document.documentElement.addEventListener('mouseleave', handleLeave);
 
     return () => {
       document.documentElement.classList.remove('custom-cursor-active');
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mousedown', handleDown);
       window.removeEventListener('mouseup', handleUp);
-      document.removeEventListener('mouseleave', handleLeave);
-      document.removeEventListener('mouseenter', handleEnter);
-      window.removeEventListener('resize', handleResize);
+      document.documentElement.removeEventListener('mouseleave', handleLeave);
       cancelAnimationFrame(frameId);
     };
-  }, [visible]);
+  }, [enabled]);
 
-  // Don't render on touch devices
-  if (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) return null;
+  if (!enabled) return null;
 
+  // white + difference blend: reads as the inverse of whatever is underneath, so the cursor
+  // stays visible over the dark lightbox, photos and toasts in either theme
   return (
     <>
-      <canvas
-        ref={canvasRef}
-        className={`fixed inset-0 pointer-events-none z-[9998] transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
-      />
       <div
         ref={dotRef}
-        className={`fixed top-0 left-0 w-1.5 h-1.5 bg-[var(--text-primary)] rounded-full pointer-events-none z-[9999] transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed top-0 left-0 w-1.5 h-1.5 bg-white mix-blend-difference rounded-full pointer-events-none z-[9999] transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
       />
       <div
         ref={ringRef}
-        className={`fixed top-0 left-0 border border-[var(--text-primary)]/30 rounded-full pointer-events-none z-[9999] transition-[width,height,opacity,border-width] duration-200 ease-out ${visible ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed top-0 left-0 border border-white/40 mix-blend-difference rounded-full pointer-events-none z-[9999] transition-[width,height,opacity,border-width] duration-200 ease-out ${visible ? 'opacity-100' : 'opacity-0'}`}
       />
     </>
   );

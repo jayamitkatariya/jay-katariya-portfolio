@@ -18,7 +18,6 @@ const LOCATIONS: MapLocation[] = [
   { name: 'west lafayette', context: 'purdue university', lat: 40.43, lng: -86.91, color: '#818cf8', category: 'study', region: 'us' },
   { name: 'mauritius', context: 'traveled', lat: -20.35, lng: 57.55, color: '#22d3ee', category: 'visited', region: 'mauritius' },
   { name: 'singapore', context: 'traveled', lat: 1.35, lng: 103.82, color: '#22d3ee', category: 'visited', region: 'singapore' },
-  { name: 'germany', context: 'traveled', lat: 51.16, lng: 10.45, color: '#22d3ee', category: 'visited', region: 'europe' },
   { name: 'switzerland', context: 'traveled', lat: 46.82, lng: 8.23, color: '#22d3ee', category: 'visited', region: 'europe' },
   { name: 'spain', context: 'traveled', lat: 40.46, lng: -3.75, color: '#22d3ee', category: 'visited', region: 'europe' },
   { name: 'los angeles', context: 'traveled', lat: 34.05, lng: -118.24, color: '#22d3ee', category: 'visited', region: 'us' },
@@ -156,9 +155,8 @@ export default function WorldMap({ isDark }: { isDark?: boolean }) {
   function labelPos(loc: typeof locationCoords[0]): { dx: number; dy: number; anchor: 'start' | 'middle' | 'end' } {
     const [x] = loc.xy;
     if (x > 850) return { dx: -14, dy: 4, anchor: 'end' };
-    if (loc.name === 'switzerland') return { dx: -12, dy: 8, anchor: 'end' };
+    if (loc.name === 'switzerland') return { dx: 10, dy: -4, anchor: 'start' };
     if (loc.name === 'spain') return { dx: -12, dy: 4, anchor: 'end' };
-    if (loc.name === 'germany') return { dx: 10, dy: -4, anchor: 'start' };
     if (loc.name === 'west lafayette') return { dx: 0, dy: -16, anchor: 'middle' };
     // US cluster: spread labels in different directions so they don't overlap
     if (loc.name === 'los angeles') return { dx: -11, dy: 0, anchor: 'end' };

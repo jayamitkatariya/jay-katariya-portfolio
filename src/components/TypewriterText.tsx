@@ -1,4 +1,5 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
+import { prefersReducedMotion } from '../lib/dither';
 
 interface TypewriterTextProps {
   texts: string[];
@@ -25,61 +26,67 @@ export default function TypewriterText({
   const spanRef = useRef<HTMLSpanElement>(null);
   const cursorRef = useRef<HTMLSpanElement>(null);
 
-  const render = useCallback(() => {
-    if (spanRef.current) {
-      spanRef.current.textContent = displayRef.current;
-    }
-  }, []);
-
-  const tick = useCallback(() => {
-    const currentFullText = texts[textIndexRef.current];
-    const speed = isDeletingRef.current ? deletingSpeed : typingSpeed;
-
-    if (!isDeletingRef.current) {
-      // Typing
-      const next = currentFullText.slice(0, displayRef.current.length + 1);
-      displayRef.current = next;
-      render();
-
-      if (next === currentFullText) {
-        // Finished typing, pause then delete
-        timeoutRef.current = setTimeout(() => {
-          isDeletingRef.current = true;
-          tick();
-        }, pauseDuration);
-        return;
-      }
-    } else {
-      // Deleting
-      const next = currentFullText.slice(0, displayRef.current.length - 1);
-      displayRef.current = next;
-      render();
-
-      if (next === '') {
-        isDeletingRef.current = false;
-        textIndexRef.current = (textIndexRef.current + 1) % texts.length;
-      }
-    }
-
-    timeoutRef.current = setTimeout(tick, speed + Math.random() * 20);
-  }, [texts, typingSpeed, deletingSpeed, pauseDuration, render]);
+  // latest props via refs, so a re-render with an equal-but-new array doesn't restart typing
+  const textsRef = useRef(texts);
+  textsRef.current = texts;
+  const textsKey = texts.join('\n');
 
   useEffect(() => {
-    // Reset on texts change
+    const render = () => {
+      if (spanRef.current) spanRef.current.textContent = displayRef.current;
+    };
+
     displayRef.current = '';
     isDeletingRef.current = false;
     textIndexRef.current = 0;
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    if (prefersReducedMotion()) {
+      displayRef.current = textsRef.current[0] ?? '';
+      render();
+      return;
+    }
+
+    const tick = () => {
+      const list = textsRef.current;
+      const currentFullText = list[textIndexRef.current % list.length] ?? '';
+      const speed = isDeletingRef.current ? deletingSpeed : typingSpeed;
+
+      if (!isDeletingRef.current) {
+        const next = currentFullText.slice(0, displayRef.current.length + 1);
+        displayRef.current = next;
+        render();
+
+        if (next === currentFullText) {
+          // Finished typing, pause then delete
+          timeoutRef.current = setTimeout(() => {
+            isDeletingRef.current = true;
+            tick();
+          }, pauseDuration);
+          return;
+        }
+      } else {
+        const next = currentFullText.slice(0, displayRef.current.length - 1);
+        displayRef.current = next;
+        render();
+
+        if (next === '') {
+          isDeletingRef.current = false;
+          textIndexRef.current = (textIndexRef.current + 1) % list.length;
+        }
+      }
+
+      timeoutRef.current = setTimeout(tick, speed + Math.random() * 20);
+    };
 
     timeoutRef.current = setTimeout(tick, typingSpeed);
-
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [texts, tick, typingSpeed]);
+  }, [textsKey, typingSpeed, deletingSpeed, pauseDuration]);
 
   // Blink cursor
   useEffect(() => {
+    if (prefersReducedMotion()) return;
     let visible = true;
     cursorIntervalRef.current = setInterval(() => {
       visible = !visible;
@@ -94,9 +101,12 @@ export default function TypewriterText({
 
   return (
     <span className={className}>
-      <span ref={spanRef} />
+      {/* screen readers get the lines whole, not a half-typed fragment */}
+      <span className="sr-only">{texts.join('. ')}</span>
+      <span ref={spanRef} aria-hidden="true" />
       <span
         ref={cursorRef}
+        aria-hidden="true"
         className="inline-block w-[2px] h-[1em] bg-current ml-0.5 align-middle"
       />
     </span>

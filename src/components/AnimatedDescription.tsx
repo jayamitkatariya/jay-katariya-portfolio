@@ -6,72 +6,41 @@ interface AnimatedDescriptionProps {
   className?: string;
 }
 
-// Matches numbers like: 10, 130k, 500k, 100+, 4%, 0.02%, 0.02
-const NUMBER_REGEX = /\b\d+(?:\.\d+)?(?:k|m|%)?\+?\b/gi;
+// Matches numbers like: 10, 9,000, 130k, $1.6K, 100+, 4%, 0.02%
+const NUMBER_REGEX = /\b(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)([kKmM%]?\+?)(?![\w,]*\d)/g;
 
 export default function AnimatedDescription({ text, className = '' }: AnimatedDescriptionProps) {
   const elements: ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
-  let matchCount = 0;
 
   const regex = new RegExp(NUMBER_REGEX.source, NUMBER_REGEX.flags);
 
   while ((match = regex.exec(text)) !== null) {
-    // Text before the match
+    const [raw, digits, suffix] = match;
+    // a match glued to letters (e.g. "u-16" is fine, "16th" or "mgmt100" are not numbers to animate)
+    const after = text[match.index + raw.length];
+    if (after && /[a-z]/i.test(after)) continue;
+
     if (match.index > lastIndex) {
-      elements.push(
-        <span key={`t-${lastIndex}`}>{text.slice(lastIndex, match.index)}</span>
-      );
+      elements.push(<span key={`t-${lastIndex}`}>{text.slice(lastIndex, match.index)}</span>);
     }
 
-    const raw = match[0];
-    const lower = raw.toLowerCase();
+    const decimals = digits.includes('.') ? digits.split('.')[1].length : 0;
+    elements.push(
+      <CountUp
+        key={`n-${match.index}`}
+        end={parseFloat(digits.replace(/,/g, ''))}
+        suffix={suffix}
+        decimals={decimals}
+        grouping={digits.includes(',')}
+        className="font-medium text-[var(--text-primary)]"
+      />
+    );
 
-    // Parse the number value
-    let numericValue: number;
-    let suffix = '';
-
-    if (lower.includes('k')) {
-      const num = parseFloat(lower.replace(/[k+%]/g, ''));
-      numericValue = num;
-      suffix = 'k' + (lower.includes('+') ? '+' : '');
-    } else if (lower.includes('m')) {
-      const num = parseFloat(lower.replace(/[m+%]/g, ''));
-      numericValue = num;
-      suffix = 'm' + (lower.includes('+') ? '+' : '');
-    } else if (lower.includes('%')) {
-      const num = parseFloat(lower.replace(/[%+]/g, ''));
-      numericValue = num;
-      suffix = '%' + (lower.includes('+') ? '+' : '');
-    } else if (lower.includes('+')) {
-      numericValue = parseFloat(lower.replace('+', ''));
-      suffix = '+';
-    } else {
-      numericValue = parseFloat(lower);
-    }
-
-    if (!isNaN(numericValue)) {
-      const decimals = lower.includes('.') ? 2 : 0;
-      elements.push(
-        <span key={`n-${match.index}`}>
-          <CountUp
-            end={numericValue}
-            suffix={suffix}
-            decimals={decimals}
-            className="font-medium text-[var(--text-primary)]"
-          />
-        </span>
-      );
-    } else {
-      elements.push(<span key={`n-${match.index}`}>{raw}</span>);
-    }
-
-    lastIndex = regex.lastIndex;
-    matchCount++;
+    lastIndex = match.index + raw.length;
   }
 
-  // Remaining text after last match
   if (lastIndex < text.length) {
     elements.push(<span key={`t-${lastIndex}`}>{text.slice(lastIndex)}</span>);
   }

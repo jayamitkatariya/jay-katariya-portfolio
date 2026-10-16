@@ -1,52 +1,53 @@
 import { motion } from 'motion/react';
+import type { ProjectType } from '../../data/projects';
 
-export type Category = 'all' | 'personal' | 'startup' | 'consulting' | 'freelance';
+export type Category = 'all' | ProjectType;
 
 interface CategoryFilterProps {
   active: Category;
   onChange: (category: Category) => void;
+  counts: Record<string, number>;
 }
 
-const CATEGORIES: { id: Category; label: string; rgb: string; accent: string }[] = [
-  { id: 'all', label: 'all', rgb: '107, 114, 128', accent: 'text-[var(--text-primary)]' },
-  { id: 'startup', label: 'startup', rgb: '59, 130, 246', accent: 'text-blue-400' },
-  { id: 'consulting', label: 'consulting', rgb: '16, 185, 129', accent: 'text-emerald-400' },
-  { id: 'personal', label: 'personal', rgb: '168, 85, 247', accent: 'text-purple-400' },
-  { id: 'freelance', label: 'freelance', rgb: '245, 158, 11', accent: 'text-amber-400' },
+const CATEGORIES: { id: Category; label: string; dot: string }[] = [
+  { id: 'all', label: 'all', dot: 'bg-[var(--text-primary)]' },
+  { id: 'startup', label: 'startup', dot: 'bg-blue-500' },
+  { id: 'consulting', label: 'consulting', dot: 'bg-emerald-500' },
+  { id: 'personal', label: 'personal', dot: 'bg-purple-500' },
+  { id: 'freelance', label: 'freelance', dot: 'bg-amber-500' },
 ];
 
-export function getCategoryStyle(type: string) {
-  const cat = CATEGORIES.find((c) => c.id === type);
-  return {
-    rgb: cat?.rgb ?? '107, 114, 128',
-    accent: cat?.accent ?? 'text-[var(--text-secondary)]',
-  };
+export function getCategoryDot(type: string) {
+  return CATEGORIES.find((c) => c.id === type)?.dot ?? 'bg-[var(--text-tertiary)]';
 }
 
-export default function CategoryFilter({ active, onChange }: CategoryFilterProps) {
+export default function CategoryFilter({ active, onChange, counts }: CategoryFilterProps) {
   return (
-    <div className="flex gap-1.5 overflow-x-auto pb-1 -mb-1 scrollbar-none">
+    // lg+: one row, running into the empty space under the badge, rather than orphaning the last chip
+    <div className="relative z-10 flex flex-wrap lg:flex-nowrap lg:w-max gap-1.5 pointer-coarse:gap-2" role="group" aria-label="filter projects by category">
       {CATEGORIES.map((cat) => {
         const isActive = active === cat.id;
+        const count = cat.id === 'all' ? Object.values(counts).reduce((a, b) => a + b, 0) : counts[cat.id] ?? 0;
+        if (!count) return null;
         return (
           <button
             key={cat.id}
             onClick={() => onChange(cat.id)}
-            className={`relative px-4 py-2 rounded-full font-mono text-[11px] tracking-wider transition-colors duration-200 whitespace-nowrap ${
-              isActive ? cat.accent + ' font-medium' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
+            aria-pressed={isActive}
+            className={`relative flex items-center gap-2 px-3.5 py-2 pointer-coarse:py-3 rounded-full font-mono text-[11px] tracking-wider whitespace-nowrap transition-colors duration-200 ${
+              isActive ? 'text-[var(--bg-primary)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
             }`}
           >
             {isActive && (
-              <motion.div
+              <motion.span
                 layoutId="activeFilter"
-                className="absolute inset-0 rounded-full border border-[var(--border-primary)]"
-                style={{
-                  background: `rgba(${cat.rgb}, 0.08)`,
-                }}
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                className="absolute inset-0 rounded-full bg-[var(--text-primary)]"
+                transition={{ type: 'spring', stiffness: 420, damping: 32 }}
               />
             )}
-            <span className="relative z-10">{cat.label}</span>
+            <span className={`relative w-1.5 h-1.5 ${isActive ? 'bg-[var(--bg-primary)]' : cat.dot}`} aria-hidden="true" />
+            <span className="relative">{cat.label}</span>
+            <span className={`relative ${isActive ? 'opacity-60' : 'text-[var(--text-muted)]'}`}>{count}</span>
           </button>
         );
       })}

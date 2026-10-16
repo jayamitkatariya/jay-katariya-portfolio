@@ -1,5 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
+
+/* dark: follows the site's own toggle (html.dark), not just the OS setting */
+@custom-variant dark (&:where(.dark, .dark *));
+/* short: landscape phones, where height is the scarce dimension */
+@custom-variant short (@media (max-height: 500px));
 
 @theme {
   --font-sans: "Inter", sans-serif;
@@ -17,7 +21,6 @@
   --text-tertiary: #9ca3af;
   --text-muted: #d1d5db;
   --border-primary: #e5e7eb;
-  --border-secondary: #f3f4f6;
   --nav-bg: rgba(255, 255, 255, 0.8);
   --card-bg: rgba(255, 255, 255, 0.85);
   --scrollbar-track: #ffffff;
@@ -25,8 +28,8 @@
   --scrollbar-thumb-hover: #d4d4d4;
   --selection-bg: #000000;
   --selection-text: #ffffff;
-  --canvas-fill: #111111;
-  --canvas-bg: #ffffff;
+  --dither-ink: #4f46e5;
+  --grid-line: rgba(0, 0, 0, 0.045);
 }
 
 html.dark {
@@ -38,7 +41,6 @@ html.dark {
   --text-tertiary: #737373;
   --text-muted: #404040;
   --border-primary: #262626;
-  --border-secondary: #1a1a1a;
   --nav-bg: rgba(10, 10, 10, 0.8);
   --card-bg: rgba(10, 10, 10, 0.6);
   --scrollbar-track: #0a0a0a;
@@ -46,8 +48,8 @@ html.dark {
   --scrollbar-thumb-hover: #404040;
   --selection-bg: #ffffff;
   --selection-text: #000000;
-  --canvas-fill: #f5f5f5;
-  --canvas-bg: #0a0a0a;
+  --dither-ink: #6366f1;
+  --grid-line: rgba(255, 255, 255, 0.035);
 }
 
 /* ── View Transitions (Dark Mode) ── */
@@ -88,7 +90,11 @@ html.dark {
 }
 
 html {
+  position: relative;
+  background-color: var(--bg-primary);
   scroll-behavior: smooth;
+  /* no sideways jump when a dialog locks scrolling (no-op with overlay scrollbars) */
+  scrollbar-gutter: stable;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -101,36 +107,20 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  /* viewport-fit=cover: keep content clear of the notch in landscape */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Prevent horizontal overflow */
 #root {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 ::selection {
   background-color: var(--selection-bg);
   color: var(--selection-text);
-}
-
-.halftone-wrapper {
-  position: relative;
-  overflow: hidden;
-}
-
-.halftone-wrapper::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(var(--bg-primary) 1.5px, transparent 1.5px);
-  background-size: 4px 4px;
-  pointer-events: none;
-}
-
-.pixel-filter {
-  filter: grayscale(100%) contrast(1.2) brightness(1.05);
-  image-rendering: pixelated;
 }
 
 ::-webkit-scrollbar {
@@ -151,6 +141,44 @@ body {
   html.custom-cursor-active * { cursor: none !important; }
 }
 
+section[id] {
+  scroll-margin-top: 72px;
+}
+
+/* horizontal chip rails scroll by touch; no bar needed */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Hero graph paper (matches LifeCanvas CELL) ── */
+.hero-grid {
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 14px 14px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 100%);
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 100%);
+}
+
+/* ── Footer links: underline wipes in from the left ──
+   layered, so padding utilities (bigger touch targets) can override it */
+@layer components {
+  .footer-link {
+    background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0% 1px;
+    transition: background-size 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.2s;
+    padding-bottom: 2px;
+  }
+}
+/* hover-capable only, or a tap leaves the underline stuck on iOS */
+@media (hover: hover) {
+  .footer-link:hover {
+    background-size: 100% 1px;
+  }
+}
+
 /* ── Marquee Animation ── */
 @keyframes marquee-left {
   0% { transform: translateX(0); }
@@ -168,6 +196,12 @@ body {
 
 .animate-marquee-right {
   animation: marquee-right 30s linear infinite;
+}
+
+/* soft edges so chips glide in/out instead of clipping */
+.marquee-fade {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
 }
 
 .animate-marquee-left:hover,
@@ -217,11 +251,59 @@ body {
   background-size: 256px 256px;
 }
 
-/* ── Skill Constellation Glow ── */
-.skill-tag-glow {
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25), 0 0 24px rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.5) !important;
-  color: rgb(16, 185, 129) !important;
+@keyframes fade-up {
+  /* no `to`: ends at the element's own opacity/transform */
+  from { opacity: 0; transform: translateY(6px); }
+}
+.animate-fade-up {
+  animation: fade-up 0.3s cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+/* ── Pixel blink (status markers) ── */
+@keyframes pixel-blink {
+  50% { opacity: 0; }
+}
+.animate-pixel-blink {
+  animation: pixel-blink 1.06s steps(1) infinite;
+}
+
+/* ── Pixel mascots (tablet/laptop-width decorations) ── */
+@keyframes sprite-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-sprite-bob {
+  animation: sprite-bob 2.4s steps(6) infinite;
+}
+
+/* walks the full width of its lane, flipping at each end. Transform-only, so it never
+   triggers layout: the runner is a full-lane-width track (100% = lane width) holding a
+   sprite --sprite wide, and the sprite flips on the same clock. */
+@keyframes lane-run {
+  0%, 100% { transform: translateX(0); }
+  45%, 50% { transform: translateX(calc(100% - var(--sprite))); }
+  95%      { transform: translateX(0); }
+}
+@keyframes lane-flip {
+  0%, 45%, 100% { transform: scaleX(1); }
+  50%, 95%      { transform: scaleX(-1); }
+}
+.animate-lane-run {
+  animation: lane-run 6s linear infinite;
+}
+.animate-lane-flip {
+  animation: lane-flip 6s linear infinite;
+}
+
+
+/* ── Keyboard focus: crisp square ring, only for keyboard users ── */
+:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* Respect reduced motion preference */
@@ -233,5 +315,57 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    /* or staggered reveals (pixel icons, loading tiles) still trickle in one by one */
+    transition-delay: 0s !important;
   }
 }
+
+/* dark-mode spam easter egg */
+.disco-flicker {
+  mix-blend-mode: difference;
+  /* 0.4s per colour: under WCAG 2.3.1's three flashes a second */
+  animation: disco 2s steps(1) infinite;
+}
+@keyframes disco {
+  0% { background: rgba(255, 0, 128, 0.55); }
+  20% { background: rgba(0, 200, 255, 0.55); }
+  40% { background: rgba(255, 220, 0, 0.55); }
+  60% { background: rgba(120, 0, 255, 0.55); }
+  80% { background: rgba(0, 255, 120, 0.55); }
+}
+
+/* ── Agent mode: semantic html dressed as markdown ── */
+.agent-doc h1,
+.agent-doc h2,
+.agent-doc h3 {
+  color: var(--text-primary);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.agent-doc h1 { font-size: 1.5em; margin-bottom: 1rem; }
+.agent-doc h2 { font-size: 1.1em; margin: 2.5rem 0 0.75rem; }
+.agent-doc h3 { font-size: 1em; margin: 1.25rem 0 0.15rem; }
+.agent-doc h1::before { content: '# '; color: var(--text-tertiary); }
+.agent-doc h2::before { content: '## '; color: var(--text-tertiary); }
+.agent-doc h3::before { content: '### '; color: var(--text-tertiary); }
+.agent-doc blockquote::before { content: '> '; color: var(--text-tertiary); }
+.agent-doc main p + p { margin-top: 0.75rem; }
+.agent-doc main ul { margin-top: 0.4rem; }
+.agent-doc main li { padding-left: 2ch; text-indent: -2ch; }
+.agent-doc main li::before { content: '- '; color: var(--text-tertiary); }
+.agent-doc strong { color: var(--text-primary); font-weight: 500; }
+.agent-doc .agent-meta,
+.agent-doc .agent-tags { color: var(--text-tertiary); }
+.agent-doc dl > div { display: flex; flex-wrap: wrap; gap: 0 1ch; }
+.agent-doc dt { color: var(--text-primary); }
+.agent-doc dt::after { content: ':'; }
+.agent-doc a,
+.agent-doc .agent-link {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--text-muted);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s;
+}
+.agent-doc a:hover,
+.agent-doc .agent-link:hover { text-decoration-color: currentColor; }

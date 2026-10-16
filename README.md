@@ -11,6 +11,5 @@
 
 1. Install dependencies:
    `npm install`
-2. Set the `ANTHROPIC_API_KEY` in [.env.local](.env.local)
-3. Run the app:
+2. Run the app:
    `npm run dev`

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { prefersReducedMotion } from '../lib/dither';
 
 interface TextScrambleProps {
   text: string;
@@ -10,6 +11,8 @@ interface TextScrambleProps {
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
 
+// Decodes `text` from random characters. Screen readers get the real text from
+// a visually-hidden copy; the animated glyphs are aria-hidden.
 export default function TextScramble({
   text,
   className = '',
@@ -20,76 +23,59 @@ export default function TextScramble({
   const [displayText, setDisplayText] = useState(text);
   const hasPlayedRef = useRef(false);
   const ref = useRef<HTMLSpanElement>(null);
-  const frameRef = useRef<number>(0);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-
-  const scramble = useRef(() => {
-    const startTime = performance.now();
-    const length = text.length;
-
-    const tick = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const revealedCount = Math.floor(progress * length);
-
-      let result = '';
-      for (let i = 0; i < length; i++) {
-        if (i < revealedCount) {
-          result += text[i];
-        } else if (text[i] === ' ') {
-          result += ' ';
-        } else {
-          result += CHARS[Math.floor(Math.random() * CHARS.length)];
-        }
-      }
-      setDisplayText(result);
-
-      if (progress < 1) {
-        frameRef.current = requestAnimationFrame(tick);
-      } else {
-        setDisplayText(text);
-      }
-    };
-
-    frameRef.current = requestAnimationFrame(tick);
-  }).current;
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      setDisplayText(text);
+      return;
+    }
+
+    let frame = 0;
+    const scramble = () => {
+      const startTime = performance.now();
+      const tick = (now: number) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const revealedCount = Math.floor(progress * text.length);
+        let result = '';
+        for (let i = 0; i < text.length; i++) {
+          if (i < revealedCount || text[i] === ' ') result += text[i];
+          else result += CHARS[Math.floor(Math.random() * CHARS.length)];
+        }
+        setDisplayText(result);
+        if (progress < 1) frame = requestAnimationFrame(tick);
+        else setDisplayText(text);
+      };
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(tick);
+    };
+
     if (trigger === 'mount') {
       scramble();
-      return () => cancelAnimationFrame(frameRef.current);
+      return () => cancelAnimationFrame(frame);
     }
 
     const el = ref.current;
     if (!el) return;
-
-    // Clean up previous observer
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-
-    observerRef.current = new IntersectionObserver(
+    const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          if (!once || !hasPlayedRef.current) {
-            scramble();
-            hasPlayedRef.current = true;
-          }
+        if (entry.isIntersecting && (!once || !hasPlayedRef.current)) {
+          hasPlayedRef.current = true;
+          scramble();
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.5 },
     );
-
-    observerRef.current.observe(el);
+    io.observe(el);
     return () => {
-      if (observerRef.current) observerRef.current.disconnect();
-      cancelAnimationFrame(frameRef.current);
+      io.disconnect();
+      cancelAnimationFrame(frame);
     };
-  }, [text, duration, trigger, once, scramble]);
+  }, [text, duration, trigger, once]);
 
   return (
     <span ref={ref} className={className}>
-      {displayText}
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true">{displayText}</span>
     </span>
   );
 }

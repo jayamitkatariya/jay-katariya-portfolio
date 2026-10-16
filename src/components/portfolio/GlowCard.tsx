@@ -1,122 +1,68 @@
-import { useRef, useState, useCallback } from 'react';
-import type { ReactNode } from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import type { Project } from '../../data/projects';
+import { PixelIcon } from '../SectionHeading';
 
 interface GlowCardProps {
   project: Project;
-  glowRGB: string;
-  accentClass: string;
+  /** tailwind bg class for the category's pixel marker */
+  dotClass: string;
   index: number;
 }
 
-export default function GlowCard({ project, glowRGB, accentClass }: GlowCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
-  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
-
-  const isTouch = 'ontouchstart' in window;
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (isTouch || !cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-
-    // 3D tilt calculation
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    setTilt({
-      rotateX: (y - 0.5) * -8,
-      rotateY: (x - 0.5) * 8,
-    });
-  }, [isTouch]);
-
-  const handleMouseLeave = useCallback(() => {
-    setIsHovered(false);
-    setTilt({ rotateX: 0, rotateY: 0 });
-  }, []);
-
+// Project card in the site's monochrome pixel language: index number, category
+// pixel, and a pixel ▸ that steps in on hover. Color is confined to one pixel.
+export default function GlowCard({ project, dotClass, index }: GlowCardProps) {
   const Wrapper = project.url ? 'a' : 'div';
   const wrapperProps = project.url
     ? { href: project.url, target: '_blank' as const, rel: 'noopener noreferrer' }
     : {};
 
   return (
-    <div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      className="relative group h-full"
-      style={{ perspective: '1000px' }}
+    <Wrapper
+      {...wrapperProps}
+      className={`group relative flex flex-col h-full rounded-2xl border border-[var(--border-primary)] bg-[var(--card-bg)] p-5 sm:p-6 transition-[border-color,translate,scale,box-shadow] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-[var(--text-tertiary)] hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-16px_rgba(0,0,0,0.25)] active:scale-[0.99] active:border-[var(--text-tertiary)] ${
+        project.url ? 'cursor-pointer' : 'cursor-default'
+      }`}
     >
-      {/* Glow border on hover */}
-      {!isTouch && (
-        <div
-          className="absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-          style={{
-            background: `radial-gradient(400px circle at ${mousePos.x}px ${mousePos.y}px, rgba(${glowRGB}, 0.35), transparent 60%)`,
-          }}
-        />
-      )}
-
-      {/* Card */}
-      <Wrapper
-        {...wrapperProps}
-        className="relative z-10 flex flex-col rounded-2xl border border-[var(--border-primary)] bg-[var(--card-bg)] backdrop-blur-sm p-5 sm:p-6 h-full transition-all duration-300 group-hover:border-transparent group-hover:shadow-lg cursor-pointer"
-        style={{
-          boxShadow: isHovered
-            ? `0 8px 32px rgba(${glowRGB}, 0.15), 0 2px 8px rgba(0,0,0,0.04)`
-            : '0 1px 3px rgba(0,0,0,0.04)',
-          transform: `rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg)`,
-          transformStyle: 'preserve-3d',
-          transition: 'transform 0.15s ease-out, box-shadow 0.3s ease',
-        }}
-      >
-        {/* Glare overlay */}
-        {!isTouch && (
-          <div
-            className="absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-150"
-            style={{
-              background: `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,${isHovered ? 0.06 : 0}), transparent 60%)`,
-              opacity: isHovered ? 1 : 0,
-            }}
+      {/* Header: index + category + link */}
+      <div className="flex items-center gap-2.5 mb-5 font-mono text-[11px] tracking-widest">
+        <span className="relative w-5 text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors duration-300">
+          <span className="group-hover:opacity-0 transition-opacity duration-150">{String(index + 1).padStart(2, '0')}</span>
+          <PixelIcon
+            name="arrow"
+            size={12}
+            instant
+            className="absolute left-0 top-1/2 -translate-y-1/2 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 [transition-timing-function:steps(3)]"
+          />
+        </span>
+        <span className={`w-1.5 h-1.5 ${dotClass}`} aria-hidden="true" />
+        <span className="uppercase text-[var(--text-tertiary)]">{project.type}</span>
+        {project.url && (
+          <ArrowUpRight
+            size={14}
+            className="ml-auto text-[var(--text-muted)] group-hover:text-[var(--text-primary)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all duration-300"
           />
         )}
+      </div>
 
-        {/* Header: category + link icon */}
-        <div className="flex items-center justify-between mb-4">
-          <span className={`font-mono text-[10px] tracking-widest uppercase ${accentClass}`}>
-            {project.type}
+      <h3 className="text-lg sm:text-xl font-medium tracking-tight text-[var(--text-primary)] mb-2">
+        {project.name}
+      </h3>
+
+      <p className="text-sm text-[var(--text-secondary)] font-light leading-relaxed mb-5 flex-1">
+        {project.description}
+      </p>
+
+      <div className="flex flex-wrap gap-1.5 mt-auto">
+        {project.tags.map((tag) => (
+          <span
+            key={tag}
+            className="px-2 py-0.5 rounded-full text-[11px] font-mono text-[var(--text-tertiary)] border border-[var(--border-primary)]"
+          >
+            {tag}
           </span>
-          {project.url && (
-            <ExternalLink size={14} className="text-[var(--text-muted)] group-hover:text-[var(--text-tertiary)] transition-colors" />
-          )}
-        </div>
-
-        {/* Name */}
-        <h3 className="font-mono text-base sm:text-lg font-medium text-[var(--text-primary)] mb-2 group-hover:text-[var(--text-primary)] transition-colors">
-          {project.name}
-        </h3>
-
-        {/* Description */}
-        <p className="text-sm text-[var(--text-secondary)] font-light leading-relaxed mb-4 flex-1">
-          {project.description}
-        </p>
-
-        {/* Tags */}
-        <div className="flex flex-wrap gap-1.5 mt-auto">
-          {project.tags.map((tag) => (
-            <span
-              key={tag}
-              className="px-2 py-0.5 rounded-full text-[10px] font-mono text-[var(--text-tertiary)] bg-[var(--bg-secondary)] border border-[var(--border-secondary)]"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      </Wrapper>
-    </div>
+        ))}
+      </div>
+    </Wrapper>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { prefersReducedMotion } from '../lib/dither';
 
 interface CountUpProps {
   end: number;
@@ -7,6 +8,7 @@ interface CountUpProps {
   suffix?: string;
   className?: string;
   decimals?: number;
+  grouping?: boolean;
 }
 
 export default function CountUp({
@@ -16,60 +18,58 @@ export default function CountUp({
   suffix = '',
   className = '',
   decimals = 0,
+  grouping = false,
 }: CountUpProps) {
   const [displayValue, setDisplayValue] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
-  const hasAnimatedRef = useRef(false);
-  const frameRef = useRef<number>(0);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (prefersReducedMotion()) {
+      setDisplayValue(end);
+      return;
+    }
+
+    let frame = 0;
+    const start = () => {
+      // anchored to the first frame's timestamp: rAF's `now` can predate a performance.now()
+      // taken here, which made progress negative and briefly rendered "-0%" / "$-5k"
+      let startTime = -1;
+      const tick = (now: number) => {
+        if (startTime < 0) startTime = now;
+        const progress = Math.min((now - startTime) / duration, 1);
+        // Ease out quart
+        setDisplayValue(progress < 1 ? (1 - Math.pow(1 - progress, 4)) * end : end);
+        if (progress < 1) frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+    };
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !hasAnimatedRef.current) {
-          hasAnimatedRef.current = true;
-          setIsVisible(true);
+        // above the viewport counts too: a fast scroll or jump can skip right past it
+        if (entry.isIntersecting || entry.boundingClientRect.bottom < 0) {
+          observer.disconnect();
+          if (entry.isIntersecting) start();
+          else setDisplayValue(end);
         }
       },
       { threshold: 0.3 }
     );
-
     observer.observe(el);
+
     return () => {
       observer.disconnect();
-      cancelAnimationFrame(frameRef.current);
+      cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [end, duration]);
 
-  useEffect(() => {
-    if (!isVisible) return;
-
-    const startTime = performance.now();
-
-    const tick = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease out quart
-      const eased = 1 - Math.pow(1 - progress, 4);
-      setDisplayValue(eased * end);
-
-      if (progress < 1) {
-        frameRef.current = requestAnimationFrame(tick);
-      } else {
-        setDisplayValue(end);
-      }
-    };
-
-    frameRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameRef.current);
-  }, [isVisible, end, duration]);
-
-  const formatted = decimals > 0
-    ? displayValue.toFixed(decimals)
-    : Math.round(displayValue).toLocaleString();
+  const formatted = displayValue.toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+    useGrouping: grouping,
+  });
 
   return (
     <span ref={ref} className={className}>

@@ -1,5 +1,8 @@
+// typed, so a typo can't create a project with no filter chip
+export type ProjectType = 'startup' | 'consulting' | 'freelance' | 'personal';
+
 export interface Project {
-  type: string;
+  type: ProjectType;
   name: string;
   description: string;
   tags: string[];

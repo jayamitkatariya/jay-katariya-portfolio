@@ -1,0 +1,7 @@
+# local-only files that never need to reach the build
+*.bak
+image*.png
+photos
+download-*.js
+myresume.pdf
+dist
