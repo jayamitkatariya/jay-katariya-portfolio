@@ -114,11 +114,15 @@ export function resolveColor(el: Element, cssColor: string, alpha = 1): [number,
   const probe = document.createElement('span');
   probe.style.color = cssColor;
   probe.style.display = 'none';
-  el.appendChild(probe);
+  // beside the element, not inside it: a <canvas>'s children are fallback content
+  (el.parentElement ?? document.body).appendChild(probe);
   const rgb = getComputedStyle(probe).color;
   probe.remove();
-  const m = rgb.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0];
-  return [m[0], m[1], m[2], Math.round((m[3] ?? 1) * alpha * 255)];
+  const m = rgb.match(/[\d.]+/g)?.map(Number);
+  if (!m || m.length < 3) return [128, 128, 128, Math.round(alpha * 255)]; // unreadable: mid grey, not black
+  // wide-gamut engines can serialize as color(srgb r g b / a), with channels in 0–1
+  const k = rgb.startsWith('color(') ? 255 : 1;
+  return [m[0] * k, m[1] * k, m[2] * k, Math.round((m[3] ?? 1) * alpha * 255)];
 }
 
 export const prefersReducedMotion = () =>

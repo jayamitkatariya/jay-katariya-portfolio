@@ -17,11 +17,13 @@ export function useDarkMode() {
   useLayoutEffect(() => {
     const root = document.documentElement;
     root.classList.toggle('dark', isDark);
-    root.style.colorScheme = isDark ? 'dark' : 'light';
+    // 'only light' opts out of browsers that force dark mode onto light pages (see index.html)
+    root.style.colorScheme = isDark ? 'dark' : 'only light';
     // keep the browser chrome in sync with the in-app toggle, not just the OS setting
     document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
       m.setAttribute('content', isDark ? '#0a0a0a' : '#ffffff');
     });
+    document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', isDark ? 'dark' : 'only light');
   }, [isDark]);
 
   // only an explicit toggle is a saved preference

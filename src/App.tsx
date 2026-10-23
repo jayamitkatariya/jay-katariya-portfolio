@@ -316,13 +316,13 @@ export default function App() {
         <div aria-hidden="true" className="absolute left-0 top-full w-full h-4 pointer-events-none bg-gradient-to-b from-[var(--nav-bg)] to-transparent" />
         <Link to="/" className="font-mono text-xs tracking-widest font-bold hover:text-[var(--text-secondary)] transition-colors -mx-2 px-2 py-2 pointer-coarse:py-3.5">jk.</Link>
         {/* Static on purpose: weight never changes, so links don't shift when the active page changes */}
-        <div className="flex items-center gap-0 min-[400px]:gap-1 sm:gap-2 md:gap-6 font-mono text-[10px] min-[400px]:text-[11px] sm:text-xs tracking-wider min-[400px]:tracking-widest text-[var(--text-secondary)]">
+        <div className="flex items-center gap-0 min-[400px]:gap-1 sm:gap-2 md:gap-6 font-mono text-[10px] min-[400px]:text-[11px] sm:text-xs tracking-normal min-[340px]:tracking-wider min-[400px]:tracking-widest text-[var(--text-secondary)]">
           {([['home', '/'], ['portfolio', '/portfolio'], ['memories', '/memories'], ['resume', '/resume']] as const).map(([page, to]) => (
             <Link
               key={page}
               to={to}
               aria-current={currentPage === page ? 'page' : undefined}
-              className={`relative inline-block whitespace-nowrap py-2 pointer-coarse:py-3.5 px-1.5 min-[400px]:px-2 sm:px-3 transition-colors duration-200 ${
+              className={`relative inline-block whitespace-nowrap py-2 pointer-coarse:py-3.5 px-1 min-[340px]:px-1.5 min-[400px]:px-2 sm:px-3 transition-colors duration-200 ${
                 currentPage === page ? 'text-[var(--text-primary)]' : 'hover:text-[var(--text-primary)]'
               }`}
             >

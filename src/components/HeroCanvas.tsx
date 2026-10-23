@@ -198,13 +198,18 @@ export default function HeroCanvas({ isDark = false }: { isDark?: boolean }) {
       start();
     };
 
+    const host = canvas.parentElement!;
     const init = () => {
-      const rect = canvas.getBoundingClientRect();
+      const rect = host.getBoundingClientRect();
       W = Math.max(1, Math.round(rect.width));
       H = Math.max(1, Math.round(rect.height));
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = W * dpr;
       canvas.height = H * dpr;
+      // pinned to the size it was drawn at: when the hero changes size without a re-init
+      // (see below), the host crops or the bottom fade covers the gap, but the squares never stretch
+      canvas.style.width = `${W}px`;
+      canvas.style.height = `${H}px`;
 
       step = Math.min(14, Math.max(7, Math.round(W / 144)));
       cols = Math.ceil(W / step);
@@ -365,22 +370,23 @@ export default function HeroCanvas({ isDark = false }: { isDark?: boolean }) {
     wakeRef.current = start;
     init();
 
+    // Observe the hero itself, not window resize: it reports the settled layout size (iOS fires
+    // resize mid-rotation with an in-between size), and also catches content reflow.
     let resizeTimeout: ReturnType<typeof setTimeout>;
-    const handleResize = () => {
+    const ro = new ResizeObserver(() => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        const rect = canvas.getBoundingClientRect();
-        // mobile URL bars collapsing fire resize with a small height change; don't re-noise
-        // mid-scroll. Touch only: on desktop a small height change must still resize the
-        // backing store, or the old bitmap is stretched and the squares blur.
+        const rect = host.getBoundingClientRect();
+        // small height changes on a phone (toolbar, reflow) aren't worth re-noising the
+        // portrait mid-scroll; the pinned canvas stays undistorted either way
         const sameHeight = coarsePointer() ? Math.abs(rect.height - H) < 160 : Math.round(rect.height) === H;
         if (Math.round(rect.width) === W && sameHeight) return;
         clearInterval(intervalId);
         stop();
         init();
       }, 200);
-    };
-    window.addEventListener('resize', handleResize);
+    });
+    ro.observe(host);
 
     return () => {
       disposed = true;
@@ -390,7 +396,7 @@ export default function HeroCanvas({ isDark = false }: { isDark?: boolean }) {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleMouseLeave);
       window.removeEventListener('touchcancel', handleMouseLeave);
-      window.removeEventListener('resize', handleResize);
+      ro.disconnect();
       stop();
       io.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
@@ -404,7 +410,7 @@ export default function HeroCanvas({ isDark = false }: { isDark?: boolean }) {
     <canvas
       aria-hidden="true"
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-90"
+      className="absolute top-0 left-0 z-0 pointer-events-none opacity-90"
     />
   );
 }

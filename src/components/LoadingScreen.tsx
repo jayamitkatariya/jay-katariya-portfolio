@@ -1,6 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { usePresence } from 'motion/react';
-import { bayerAt, prefersReducedMotion, resolveColor } from '../lib/dither';
+import { bayerAt, prefersReducedMotion } from '../lib/dither';
 import { coverGrid } from '../lib/tileGrid';
 import LoaderBadge from './LoaderBadge';
 
@@ -50,8 +50,11 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
     canvas.height = Math.round(rows * TILE * dpr);
     canvas.style.width = `${cols * TILE}px`;
     canvas.style.height = `${rows * TILE}px`;
-    const [r, g, b] = resolveColor(canvas, 'var(--bg-primary)');
-    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+    // the theme's own value, straight from the variable; if it can't be read, the theme's known
+    // colour — never a parsing fallback, which would paint the whole cover black
+    const root = document.documentElement;
+    const dark = root.classList.contains('dark');
+    ctx.fillStyle = getComputedStyle(root).getPropertyValue('--bg-primary').trim() || (dark ? '#0a0a0a' : '#ffffff');
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const cx = window.innerWidth / 2 / TILE;

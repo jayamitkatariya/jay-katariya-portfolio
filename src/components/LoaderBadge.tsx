@@ -5,7 +5,7 @@ import { projects } from '../data/projects';
 import { BADGE_INK, STAR } from './portfolio/badgeRig';
 
 // The portfolio ID badge, flattened for the loading screen: the canvas artwork from
-// cardFace.ts redrawn as one SVG per face, hung on CSS straps and dropped in with
+// cardFace.ts front redrawn as SVG, hung on CSS straps and dropped in with
 // springs. No three.js, physics, QR or canvas work, so it's ready on the first frame.
 // Sizes live in index.css (.loader-badge) in badgeRig's world units (--u).
 
@@ -70,7 +70,6 @@ const DUOTONE = (() => {
 })();
 
 const FRONT_PANEL = ditherPath(1064, 376, 16, t => t ** 1.6 * 0.85);
-const BACK_DITHER = ditherPath(0, H, 24, t => t ** 1.4);
 
 const mono = (size: number, weight = 400) => `${weight} ${size}px "JetBrains Mono", monospace`;
 const sans = (size: number, weight = 500) => `${weight} ${size}px Inter, sans-serif`;
@@ -172,21 +171,6 @@ function FrontFace() {
   );
 }
 
-function BackFace() {
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 w-full h-full">
-      <rect width={W} height={H} fill={ink} />
-      <path d={BACK_DITHER} fill="#262626" />
-      <g textAnchor="middle">
-        <text x={W / 2} y={170} fill={muted} style={{ font: mono(20, 500), letterSpacing: 5 }}>PORTFOLIO PASS · 2026</text>
-        <text x={W / 2} y={760} fill={paper} style={{ font: mono(170, 500), letterSpacing: -4 }}>jk.</text>
-        <text x={W / 2} y={850} fill="#b5b1a7" style={{ font: mono(28), letterSpacing: 1 }}>if found, say hi</text>
-      </g>
-      <path d={starPath(W / 2 - 24, 520, 6)} fill={accent} />
-    </svg>
-  );
-}
-
 /** Holographic seal: a slowly turning pastel foil under the printed rim, legend and star. */
 function Seal() {
   const legend = 'VERIFIED · BUILDER · 2026 · ';
@@ -224,10 +208,13 @@ const SWING: Variants = {
   hang: { transform: 'rotate(0deg)', transition: { type: 'spring', visualDuration: 0.75, bounce: 0.55, delay: DELAY + 0.18 } },
   gone: { transform: 'rotate(0deg)', transition: { duration: 0.2 } },
 };
-// card: the 3D badge's twist on the way in, showing its back before it settles face-on
+// card: the 3D badge's twist, turning in from edge-on to face you. It stays short of 90° (even
+// at the spring's overshoot), so the card never shows a back face: no black flip, and nothing
+// rides on backface-visibility, which WebKit doesn't always honour on composited layers
 const TWIST: Variants = {
-  drop: { transform: 'rotateY(200deg)' },
-  hang: { transform: 'rotateY(0deg)', transition: { type: 'spring', visualDuration: 0.6, bounce: 0.2, delay: DELAY } },
+  drop: { transform: 'rotateY(-78deg)' },
+  hang: { transform: 'rotateY(0deg)', transition: { type: 'spring', visualDuration: 0.6, bounce: 0.25, delay: DELAY } },
+  gone: { transform: 'rotateY(0deg)' }, // stays face-on while it's yanked out
 };
 const FADE: Variants = { hang: { opacity: 1 }, gone: { opacity: 0, transition: { duration: 0.2 } } };
 
@@ -281,14 +268,11 @@ function LoaderBadge({ present, reduced }: { present: boolean; reduced: boolean 
         </svg>
 
         <div className="absolute inset-0" style={{ perspective: 'calc(var(--cw) * 6)' }}>
-          <motion.div variants={reduced ? undefined : TWIST} className="relative w-full h-full" style={{ transformStyle: 'preserve-3d' }}>
+          <motion.div variants={reduced ? undefined : TWIST} className="relative w-full h-full">
             <div className="loader-face">
               <FrontFace />
               <Seal />
               <div className="loader-sheen" />
-            </div>
-            <div className="loader-face" style={{ transform: 'rotateY(180deg)' }}>
-              <BackFace />
             </div>
             {/* clamp rides with the card, so it turns with it */}
             <div
@@ -299,7 +283,6 @@ function LoaderBadge({ present, reduced }: { present: boolean; reduced: boolean 
                 width: 'calc(var(--u) * 0.32)',
                 height: 'calc(var(--u) * 0.16)',
                 background: 'linear-gradient(#3a3a3a, #161616)',
-                transform: 'translateZ(1px)',
               }}
             />
           </motion.div>

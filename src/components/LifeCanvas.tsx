@@ -38,12 +38,13 @@ export default function LifeCanvas({ isDark }: { isDark: boolean }) {
     let glow = new Float32Array(0);
     let dpr = 1;
 
+    const host = canvas.parentElement!;
     let sizedW = -1;
     let sizedH = -1;
     const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      // mobile URL bars collapsing fire resize with a small height change; keep the gliders
-      // alive. Touch only: on desktop the backing store must track the real size or it blurs.
+      const rect = host.getBoundingClientRect();
+      // small height changes on a phone (toolbar, reflow) keep the gliders alive; the canvas is
+      // pinned to its drawn size, so skipping a resize crops instead of stretching the cells
       const sameHeight = window.matchMedia('(pointer: coarse)').matches
         ? Math.abs(rect.height - sizedH) < 160
         : rect.height === sizedH;
@@ -53,6 +54,8 @@ export default function LifeCanvas({ isDark }: { isDark: boolean }) {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.max(1, Math.round(rect.width * dpr));
       canvas.height = Math.max(1, Math.round(rect.height * dpr));
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
       cols = Math.ceil(rect.width / CELL);
       rows = Math.ceil(rect.height / CELL);
       alive = new Uint8Array(cols * rows);
@@ -197,25 +200,26 @@ export default function LifeCanvas({ isDark }: { isDark: boolean }) {
     });
     io.observe(canvas);
 
+    // the hero's settled size, not window resize (which fires mid-rotation on iOS)
     let resizeTimer: ReturnType<typeof setTimeout>;
-    const onResize = () => {
+    const ro = new ResizeObserver(() => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(resize, 150);
-    };
+    });
+    ro.observe(host);
 
     window.addEventListener('mousemove', onMouse, { passive: true });
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouch, { passive: true });
-    window.addEventListener('resize', onResize);
 
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(resizeTimer);
       io.disconnect();
+      ro.disconnect();
       window.removeEventListener('mousemove', onMouse);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouch);
-      window.removeEventListener('resize', onResize);
     };
   }, []);
 
@@ -223,7 +227,7 @@ export default function LifeCanvas({ isDark }: { isDark: boolean }) {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="absolute inset-0 w-full h-full pointer-events-none"
+      className="absolute top-0 left-0 pointer-events-none"
     />
   );
 }
