@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 
 // storage can throw (blocked cookies, some in-app webviews); never let that blank the page
 function readTheme(): string | null {
@@ -10,12 +10,8 @@ function readTheme(): string | null {
 }
 
 export function useDarkMode() {
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const stored = readTheme();
-    if (stored) return stored === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  // light by default, whatever the OS says; dark only once the visitor has chosen it
+  const [isDark, setIsDark] = useState(() => typeof window !== 'undefined' && readTheme() === 'dark');
 
   // layout effect so the class is applied before children read theme colors in their effects
   useLayoutEffect(() => {
@@ -27,16 +23,6 @@ export function useDarkMode() {
       m.setAttribute('content', isDark ? '#0a0a0a' : '#ffffff');
     });
   }, [isDark]);
-
-  // until the visitor picks a theme, keep following the OS (including live switches)
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = () => {
-      if (!readTheme()) setIsDark(mq.matches);
-    };
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
 
   // only an explicit toggle is a saved preference
   const toggle = () =>
