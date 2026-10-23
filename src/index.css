@@ -267,6 +267,90 @@ section[id] {
   animation: pixel-blink 1.06s steps(1) infinite;
 }
 
+/* ── Loader badge (LoaderBadge.tsx), sized in badgeRig's world units ── */
+.loader-badge {
+  --ch: min(40svh, 300px); /* card height */
+  --cw: calc(var(--ch) * 1.6 / 2.25);
+  --u: calc(var(--cw) / 1.6); /* one world unit */
+  position: absolute;
+  left: calc(50% - var(--cw) / 2);
+  top: calc(44svh - var(--ch) / 2);
+  width: var(--cw);
+  height: var(--ch);
+  /* pendulum pivot at the top of the screen, where the straps go round the "neck" */
+  transform-origin: 50% calc(var(--ch) / 2 - 44svh);
+  text-transform: none; /* printed artwork: keep the card's own capitals */
+}
+.loader-badge__drop {
+  position: absolute;
+  inset: 0;
+}
+.loader-badge--motion,
+.loader-badge--motion .loader-badge__drop {
+  will-change: transform;
+}
+.loader-strap {
+  position: absolute;
+  bottom: calc(100% + var(--u) * 0.3); /* ends buried in the crimp */
+  width: calc(var(--u) * 0.12);
+  height: 150svh;
+  margin-left: calc(var(--u) * -0.06);
+  transform-origin: 50% 100%;
+  overflow: hidden;
+  /* stitched edges, like drawStrap: they also keep the strap legible on a dark page */
+  background:
+    repeating-linear-gradient(to bottom, #4a4a4a 0 3px, transparent 3px 5px) 15% 0 / 1px 100% no-repeat,
+    repeating-linear-gradient(to bottom, #4a4a4a 0 3px, transparent 3px 5px) 85% 0 / 1px 100% no-repeat,
+    #111;
+}
+.loader-strap span {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  translate: -50% 0;
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  font: 500 calc(var(--u) * 0.055) / 1 "JetBrains Mono", monospace;
+  letter-spacing: 0.2em;
+  color: #e8e5de;
+}
+.loader-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 5.3125% / 3.7778%; /* CARD.r over w / h */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 18px 40px -16px rgba(0, 0, 0, 0.45);
+}
+/* pastel foil, as drawHolo: turning it reads as the hologram catching light */
+.loader-holo {
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.35)),
+    conic-gradient(from 90deg, #ffc8e4, #c4d2ff, #b2f1e2, #fff1a8, #ffd3b8, #e1c8ff, #ffc8e4);
+}
+/* one gloss pass as the card settles */
+.loader-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.5) 50%, transparent 62%);
+  transform: translateX(-130%);
+}
+.loader-badge--motion .loader-holo {
+  animation: loader-holo 5s linear infinite;
+}
+.loader-badge--motion .loader-sheen {
+  animation: loader-sheen 0.7s cubic-bezier(0.3, 0.6, 0.3, 1) 0.5s both;
+}
+@keyframes loader-holo {
+  to { transform: rotate(1turn); }
+}
+@keyframes loader-sheen {
+  from { transform: translateX(-130%); }
+  to { transform: translateX(130%); }
+}
+
 /* ── Pixel mascots (tablet/laptop-width decorations) ── */
 @keyframes sprite-bob {
   0%, 100% { transform: translateY(0); }

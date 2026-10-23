@@ -1,6 +1,6 @@
 import QRCode from 'qrcode';
 import { bayerAt } from '../../lib/dither';
-import { CARD } from './badgeRig';
+import { BADGE_INK, CARD, STAR } from './badgeRig';
 
 // Artwork for the portfolio ID badge, drawn in 2D so the same image can be a
 // WebGL texture (3D badge) or a plain <img> (static fallback).
@@ -23,12 +23,7 @@ if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D
 export const CARD_W = 1024;
 export const CARD_H = 1440; // 1.6 : 2.25 — matches the 3D card's proportions
 
-const PAPER = '#f4f2ed';
-const INK = '#141414';
-const MUTED = '#8a867c';
-const RULE = '#e0dcd3';
-const ACCENT = '#4f46e5'; // the site's dither indigo
-const LIVE = '#10b981';
+const { paper: PAPER, ink: INK, muted: MUTED, rule: RULE, accent: ACCENT, live: LIVE } = BADGE_INK;
 const SITE = 'https://jaykatariya.com';
 const M = 72; // outer margin
 
@@ -37,8 +32,6 @@ export const SEAL = { x: 452, y: 728, r: 64 };
 
 const PHOTO = { x: M, y: 244, w: 400, h: 500, r: 18 };
 const PANEL_Y = 1064; // top of the ink panel
-
-const STAR = ['...##...', '...##...', '########', '.######.', '..####..', '.######.', '.##..##.', '##....##'];
 
 const mono = (size: number, weight = 400) => `${weight} ${size}px "JetBrains Mono", monospace`;
 const sans = (size: number, weight = 500) => `${weight} ${size}px Inter, sans-serif`;

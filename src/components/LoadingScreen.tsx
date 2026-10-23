@@ -2,19 +2,22 @@ import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react
 import { usePresence } from 'motion/react';
 import { bayerAt, prefersReducedMotion, resolveColor } from '../lib/dither';
 import { coverGrid } from '../lib/tileGrid';
+import LoaderBadge from './LoaderBadge';
 
-// One word typed terminal-style, then the cover "develops" away in ordered-dither
-// order — cells drop out by their 8x8 Bayer threshold (nudged so it opens from the
-// centre), the same pattern the dithered photos are printed with.
+// The ID badge drops in on its lanyard while one word types terminal-style beneath it.
+// On the way out the badge is yanked back up and the cover "develops" away in
+// ordered-dither order — cells drop out by their 8x8 Bayer threshold (nudged so it
+// opens from the centre), the same pattern the dithered photos are printed with.
 
 const GREETING = 'namaste';
-const TYPE_START = 80;
-const CHAR_MS = 55;
-const HOLD_MS = 280;
+// ~1.1s on the badge, ~1.55s until the page is fully open: a first impression, not a wait
+const TYPE_START = 380; // as the badge catches on its strap
+const CHAR_MS = 45;
+const HOLD_MS = 420;
 const TYPE_END = TYPE_START + GREETING.length * CHAR_MS;
 const READY_MS = TYPE_END + HOLD_MS;
 const TILE = 24;
-const DISSOLVE_MS = 500;
+const DISSOLVE_MS = 450;
 const RADIAL = 0.25; // share of each cell's threshold that comes from distance to centre
 
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
@@ -24,6 +27,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
   const stableOnComplete = useCallback(onComplete, []);
   const completedRef = useRef(false);
   const [isPresent, safeToRemove] = usePresence();
+  const [reduced] = useState(prefersReducedMotion);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // cell order for the dissolve, filled in when the cover is painted
   const cellsRef = useRef<{ cols: number; order: Uint32Array; thresholds: Float32Array; dpr: number } | null>(null);
@@ -67,9 +71,10 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
 
   // Type the greeting, hold a beat, then hand over to the page
   useEffect(() => {
-    if (prefersReducedMotion()) {
+    if (reduced) {
       setTyped(GREETING.length);
-      const timer = setTimeout(finish, 500);
+      // long enough to actually see the badge
+      const timer = setTimeout(finish, 700);
       return () => clearTimeout(timer);
     }
 
@@ -93,7 +98,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
       cancelAnimationFrame(raf);
       clearTimeout(fallback);
     };
-  }, [finish]);
+  }, [finish, reduced]);
 
   // Exit: eat the cover away cell by cell, in threshold order
   useEffect(() => {
@@ -143,10 +148,15 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
       <span className="sr-only">loading</span>
       <canvas ref={canvasRef} aria-hidden="true" className="absolute top-0 left-0" />
 
+      {/* outside the fading layer: it leaves by being yanked up, over the dissolve */}
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
+        <LoaderBadge present={isPresent} reduced={reduced} />
+      </div>
+
       {/* hidden from the live region, or screen readers read out every typed frame */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        className="absolute inset-x-0 bottom-[max(12svh,calc(env(safe-area-inset-bottom)+48px))] flex justify-center pointer-events-none"
         style={{ opacity: isPresent ? 1 : 0, transition: 'opacity 120ms ease-out' }}
       >
         <span className="font-mono text-base sm:text-lg tracking-[0.35em] pl-[0.35em] text-[var(--text-secondary)] select-none whitespace-pre">

@@ -3,6 +3,18 @@
 
 export const CARD = { w: 1.6, h: 2.25, d: 0.03, r: 0.085 };
 
+// Print colours, shared by the canvas artwork and the loader's DOM card
+export const BADGE_INK = {
+  paper: '#f4f2ed',
+  ink: '#141414',
+  muted: '#8a867c',
+  rule: '#e0dcd3',
+  accent: '#4f46e5', // the site's dither indigo
+  live: '#10b981',
+};
+
+export const STAR = ['...##...', '...##...', '########', '.######.', '..####..', '.######.', '.##..##.', '##....##'];
+
 // Two straps hang from anchors either side of an offscreen "neck" and meet at the clip ring.
 export const ANCHOR_X = 1.4;
 export const ANCHOR_Y = 4.3;
