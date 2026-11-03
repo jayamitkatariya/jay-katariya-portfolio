@@ -141,6 +141,17 @@ html {
   text-size-adjust: 100%;
 }
 
+/* no grey flash on tap, and no 300ms double-tap delay on controls */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a,
+button,
+[role='button'] {
+  touch-action: manipulation;
+}
+
 body {
   text-transform: lowercase;
   background-color: var(--bg-primary);
@@ -212,6 +223,26 @@ section[id] {
     background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0% 1px;
     transition: background-size 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.2s;
     padding-bottom: 2px;
+  }
+}
+
+/* ── Touch targets ──
+   Small mono links sit at 9–11px for the typography to work; that is far under a
+   comfortable thumb. On touch devices only, grow an invisible 44px hit area around
+   them instead of adding padding that would reflow the line. */
+@media (pointer: coarse) {
+  .tap-target {
+    position: relative;
+    isolation: isolate;
+  }
+  .tap-target::after {
+    content: '';
+    position: absolute;
+    left: -0.3rem;
+    right: -0.3rem;
+    top: 50%;
+    height: max(44px, 100%);
+    transform: translateY(-50%);
   }
 }
 /* hover-capable only, or a tap leaves the underline stuck on iOS */

@@ -41,7 +41,7 @@ export default function ContactSection({ onSaveContact }: { onSaveContact: () =>
       id="contact"
       className="relative mx-auto max-w-5xl px-4 pb-20 pt-10 text-center sm:px-6 sm:pb-28 sm:pt-14 md:px-8"
     >
-      <h2 className="flex items-baseline justify-center font-mono text-[9px] font-normal tracking-[0.22em] text-[var(--text-tertiary)] sm:text-[10px]">
+      <h2 className="flex items-baseline justify-center font-mono text-[10px] font-normal tracking-[0.22em] text-[var(--text-tertiary)]">
         03 / say hi
       </h2>
 
@@ -52,7 +52,7 @@ export default function ContactSection({ onSaveContact }: { onSaveContact: () =>
       <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 sm:mt-4">
         <a
           href={`mailto:${EMAIL}`}
-          className="font-display text-[clamp(1.5rem,5.2vw,3rem)] leading-none tracking-normal text-[var(--text-primary)] underline decoration-[var(--border-primary)] decoration-1 underline-offset-[5px] transition-colors duration-300 hover:decoration-[var(--accent)] sm:underline-offset-[7px]"
+          className="tap-target font-display text-[clamp(1.5rem,5.2vw,3rem)] leading-none tracking-normal text-[var(--text-primary)] underline decoration-[var(--border-primary)] decoration-1 underline-offset-[5px] transition-colors duration-300 hover:decoration-[var(--accent)] sm:underline-offset-[7px]"
         >
           {EMAIL}
         </a>
@@ -82,7 +82,7 @@ export default function ContactSection({ onSaveContact }: { onSaveContact: () =>
           href="https://linkedin.com/in/jkatariya"
           target="_blank"
           rel="noreferrer"
-          className="footer-link pointer-coarse:py-3"
+          className="tap-target footer-link pointer-coarse:py-3"
         >
           linkedin
         </a>
@@ -90,17 +90,17 @@ export default function ContactSection({ onSaveContact }: { onSaveContact: () =>
           href="https://github.com/jayamitkatariya"
           target="_blank"
           rel="noreferrer"
-          className="footer-link pointer-coarse:py-3"
+          className="tap-target footer-link pointer-coarse:py-3"
         >
           github
         </a>
-        <a href="/jay-katariya-resume.pdf" target="_blank" rel="noreferrer" className="footer-link pointer-coarse:py-3">
+        <a href="/jay-katariya-resume.pdf" target="_blank" rel="noreferrer" className="tap-target footer-link pointer-coarse:py-3">
           resume.pdf
         </a>
         <button
           type="button"
           onClick={onSaveContact}
-          className="footer-link pointer-coarse:py-3"
+          className="tap-target footer-link pointer-coarse:py-3"
         >
           save contact
         </button>

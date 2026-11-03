@@ -28,7 +28,7 @@ export default function PortfolioPage() {
       {/* Badge hero: stacked through iPad portrait, side by side from lg.
           svh, not dvh: dvh tracks the toolbar and would resize the WebGL canvas mid-scroll. */}
       <section className="relative mx-auto grid max-w-6xl grid-cols-1 px-4 sm:px-6 md:px-8 lg:grid-cols-12 lg:gap-8 xl:max-w-7xl">
-        <IdBadge className="order-1 -mx-4 h-[clamp(380px,64svh,470px)] sm:-mx-6 sm:h-[clamp(440px,60svh,540px)] md:-mx-8 md:h-[clamp(480px,52svh,600px)] short:h-[360px] lg:order-2 lg:col-span-7 lg:mx-0 lg:h-[min(80svh,760px)]" />
+        <IdBadge className="order-1 -mx-4 h-[clamp(340px,58svh,470px)] sm:-mx-6 sm:h-[clamp(440px,60svh,540px)] md:-mx-8 md:h-[clamp(480px,52svh,600px)] short:h-[360px] lg:order-2 lg:col-span-7 lg:mx-0 lg:h-[min(80svh,760px)]" />
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -47,7 +47,7 @@ export default function PortfolioPage() {
           </p>
           <a
             href="#projects"
-            className="group flex w-fit items-center gap-2 font-mono text-[9px] tracking-[0.2em] text-[var(--text-tertiary)] transition-colors duration-300 hover:text-[var(--text-primary)] sm:text-[10px]"
+            className="tap-target group flex w-fit items-center gap-2 font-mono text-[9px] tracking-[0.2em] text-[var(--text-tertiary)] transition-colors duration-300 hover:text-[var(--text-primary)] sm:text-[10px]"
           >
             the index
             <span className="transition-transform duration-300 group-hover:translate-y-0.5">↓</span>

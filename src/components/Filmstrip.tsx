@@ -41,9 +41,9 @@ export default function Filmstrip() {
   return (
     <section id="life" className="relative pb-10 pt-10 sm:pb-14 sm:pt-14 md:pb-16 md:pt-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-8 xl:max-w-7xl">
-        <div className="flex items-baseline justify-between gap-4 font-mono text-[9px] tracking-[0.22em] text-[var(--text-tertiary)] sm:text-[10px]">
+        <div className="flex items-baseline justify-between gap-4 font-mono text-[10px] tracking-[0.22em] text-[var(--text-tertiary)]">
           <h2 className="font-mono text-[9px] font-normal tracking-[0.22em] sm:text-[10px]">02 / off the clock</h2>
-          <Link to="/memories" className="group flex items-baseline gap-2 pointer-coarse:-my-2 pointer-coarse:py-2 transition-colors duration-300 hover:text-[var(--text-primary)]">
+          <Link to="/memories" className="tap-target group flex items-baseline gap-2 pointer-coarse:-my-2 pointer-coarse:py-2 transition-colors duration-300 hover:text-[var(--text-primary)]">
             <span className="hidden sm:inline">68 frames · {COUNTRY_COUNT} countries</span>
             <span className="sm:hidden">68 frames</span>
             <span className="transition-transform duration-300 group-hover:translate-x-0.5">↗</span>

@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router';
 import { motion, AnimatePresence, MotionConfig } from 'motion/react';
+import { Menu, X } from 'lucide-react';
 import ReadingProgress from './components/ReadingProgress';
 import LoadingScreen from './components/LoadingScreen';
 import { markAppReady, onAppReady } from './lib/appReady';
@@ -23,6 +24,8 @@ import HeroCity from './components/HeroCity';
 import SelectedWork from './components/SelectedWork';
 import Filmstrip from './components/Filmstrip';
 import ContactSection from './components/ContactSection';
+import MobileMenu, { PAGES } from './components/MobileMenu';
+import { useBodyScrollLock } from './hooks/useBodyScrollLock';
 
 // Route-level + heavy components load on demand to keep the first paint light
 const PortfolioPage = lazy(() => import('./components/portfolio/PortfolioPage'));
@@ -118,6 +121,10 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(() => !isAgent);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  // the phone menu: one sheet, one open state
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  useBodyScrollLock(menuOpen);
   // keep the lazily-loaded modal mounted after first open so its exit animation plays
   const qrMountedRef = useRef(false);
   if (showQR) qrMountedRef.current = true;
@@ -192,12 +199,27 @@ export default function App() {
       setShowShortcuts(false);
       setShowQR(false);
       setShowAchievements(false);
+      setMenuOpen(false);
     },
     onShortcutUsed: () => achievements.unlock('navigator'),
   }), [goToPage, achievements.unlock, showQR, showAchievements, showShortcuts, setAgent]);
 
   // agent mode is a single plain document: no page switching or help dialog behind it
   useKeyboardShortcuts(shortcutActions, !isAgent);
+
+  // the sheet belongs to the page it was opened on
+  useEffect(() => setMenuOpen(false), [location.pathname]);
+
+  // rotating into a desktop width unmounts the sheet (`sm:hidden`), so drop the
+  // open state too — otherwise the body would stay scroll-locked behind nothing
+  useEffect(() => {
+    const wide = window.matchMedia('(min-width: 640px)');
+    const onChange = () => {
+      if (wide.matches) setMenuOpen(false);
+    };
+    wide.addEventListener('change', onChange);
+    return () => wide.removeEventListener('change', onChange);
+  }, []);
 
   if (isAgent) {
     return (
@@ -225,20 +247,36 @@ export default function App() {
       {/* inside this stacking context so the nav (z-50) stays above the wipe (z-45) */}
       <PixelWipe />
       {currentPage === 'home' && <ReadingProgress />}
+      {/* Scrim for the phone menu. Sits below the nav (z-40 < z-50) so the sheet and the
+          toggle stay clickable; tapping it closes the menu. */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            key="menu-scrim"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setMenuOpen(false)}
+            aria-hidden="true"
+            className="fixed inset-0 z-40 bg-[var(--text-primary)]/10 backdrop-blur-[2px] sm:hidden"
+          />
+        )}
+      </AnimatePresence>
       {/* Navigation */}
-      <nav aria-label="primary" className={`fixed top-0 left-0 w-full [--nav-px:1rem] sm:[--nav-px:1.5rem] md:[--nav-px:3rem] xl:[--nav-px:4rem] 2xl:[--nav-px:6rem] pl-[calc(var(--nav-px)+env(safe-area-inset-left))] pr-[calc(var(--nav-px)+env(safe-area-inset-right))] py-3 sm:py-3.5 md:py-4 pointer-coarse:py-1.5 pointer-coarse:sm:py-2 flex justify-between items-center z-50 transition-[background-color,backdrop-filter] duration-300 ${navSolid ? 'bg-[var(--nav-bg)] backdrop-blur-md' : 'bg-transparent'}`}>
+      <nav aria-label="primary" className={`fixed top-0 left-0 w-full [--nav-px:1rem] sm:[--nav-px:1.5rem] md:[--nav-px:3rem] xl:[--nav-px:4rem] 2xl:[--nav-px:6rem] pl-[calc(var(--nav-px)+env(safe-area-inset-left))] pr-[calc(var(--nav-px)+env(safe-area-inset-right))] py-3 sm:py-3.5 md:py-4 pointer-coarse:py-1.5 pointer-coarse:sm:py-2 flex justify-between items-center z-50 transition-[background-color,backdrop-filter] duration-300 ${menuOpen ? 'bg-[var(--bg-primary)]' : navSolid ? 'bg-[var(--nav-bg)] backdrop-blur-md' : 'bg-transparent'}`}>
         {/* Soft fade below the bar. A smooth gradient, not a dither: a fixed pixel pattern
             over scrolling pixel art makes dots look like they freeze in place. */}
         <div aria-hidden="true" className={`absolute left-0 top-full w-full h-4 pointer-events-none bg-gradient-to-b from-[var(--nav-bg)] to-transparent transition-opacity duration-300 ${navSolid ? 'opacity-100' : 'opacity-0'}`} />
         <Link to="/" className="font-mono text-xs tracking-widest font-bold hover:text-[var(--text-secondary)] transition-colors -mx-2 px-2 py-2 pointer-coarse:py-3.5">jk.</Link>
         {/* Static on purpose: weight never changes, so links don't shift when the active page changes */}
-        <div className="flex items-center gap-0 min-[400px]:gap-1 sm:gap-2 md:gap-6 font-mono text-[10px] min-[400px]:text-[11px] sm:text-xs tracking-normal min-[340px]:tracking-wider min-[400px]:tracking-widest text-[var(--text-secondary)]">
-          {([['home', '/'], ['portfolio', '/portfolio'], ['writing', '/writing'], ['memories', '/memories'], ['resume', '/resume']] as const).map(([page, to]) => (
+        <div className="hidden sm:flex items-center gap-2 md:gap-6 font-mono text-xs tracking-widest text-[var(--text-secondary)]">
+          {PAGES.map(([page, to]) => (
             <Link
               key={page}
               to={to}
               aria-current={currentPage === page ? 'page' : undefined}
-              className={`relative inline-block whitespace-nowrap py-2 pointer-coarse:py-3.5 px-1 min-[340px]:px-1.5 min-[400px]:px-2 sm:px-3 transition-colors duration-200 ${
+              className={`relative inline-block whitespace-nowrap px-3 py-2 pointer-coarse:py-3.5 transition-colors duration-200 ${
                 currentPage === page ? 'text-[var(--text-primary)]' : 'hover:text-[var(--text-primary)]'
               }`}
             >
@@ -250,6 +288,29 @@ export default function App() {
           ))}
           <DarkModeToggle isDark={isDark} onToggle={handleDarkModeToggle} />
         </div>
+
+        {/* Phones: two controls instead of five crushed links */}
+        <div className="flex items-center gap-0.5 sm:hidden">
+          <DarkModeToggle isDark={isDark} onToggle={handleDarkModeToggle} />
+          <button
+            ref={menuButtonRef}
+            type="button"
+            onClick={() => setMenuOpen(prev => !prev)}
+            aria-expanded={menuOpen}
+            aria-controls={menuOpen ? 'mobile-menu' : undefined}
+            aria-label={menuOpen ? 'close menu' : 'open menu'}
+            className="grid h-11 w-11 place-items-center rounded-full text-[var(--text-primary)] transition-colors active:bg-[var(--bg-secondary)]"
+          >
+            {menuOpen ? <X size={19} strokeWidth={1.7} /> : <Menu size={19} strokeWidth={1.7} />}
+          </button>
+        </div>
+
+        <MobileMenu
+          isOpen={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          currentPage={currentPage}
+          returnFocusTo={menuButtonRef}
+        />
       </nav>
 
       <ErrorBoundary resetKey={location.pathname}>

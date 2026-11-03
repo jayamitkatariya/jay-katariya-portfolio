@@ -41,7 +41,7 @@ export default function DarkModeToggle({ isDark, onToggle }: DarkModeToggleProps
     <button
       ref={buttonRef}
       onClick={handleToggle}
-      className="relative p-2 rounded-full hover:bg-[var(--bg-secondary)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--text-primary)] pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5 pointer-coarse:after:content-['']"
+      className="relative grid h-9 w-9 place-items-center rounded-full pointer-coarse:h-11 pointer-coarse:w-11 hover:bg-[var(--bg-secondary)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--text-primary)] pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5 pointer-coarse:after:content-['']"
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       <span className="theme-orb" data-dark={isDark} aria-hidden="true">

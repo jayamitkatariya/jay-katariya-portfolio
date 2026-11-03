@@ -11,11 +11,11 @@ export default function SelectedWork() {
       id="work"
       className="relative mx-auto max-w-6xl scroll-mt-24 px-4 pb-12 pt-16 sm:px-6 sm:pb-16 sm:pt-24 md:px-8 md:pb-20 md:pt-28 xl:max-w-7xl"
     >
-      <div className="flex items-baseline justify-between gap-4 font-mono text-[9px] tracking-[0.22em] text-[var(--text-tertiary)] sm:text-[10px]">
+      <div className="flex items-baseline justify-between gap-4 font-mono text-[10px] tracking-[0.22em] text-[var(--text-tertiary)]">
         <h2 className="font-mono text-[9px] font-normal tracking-[0.22em] sm:text-[10px]">01 / selected work</h2>
         <Link
           to="/portfolio"
-          className="pointer-coarse:-my-2 pointer-coarse:py-2 transition-colors duration-300 hover:text-[var(--text-primary)]"
+          className="tap-target pointer-coarse:-my-2 pointer-coarse:py-2 transition-colors duration-300 hover:text-[var(--text-primary)]"
         >
           {projects.length} projects ↗
         </Link>
@@ -49,14 +49,14 @@ export default function SelectedWork() {
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-[8.5px] tracking-[0.14em] text-[var(--text-tertiary)] sm:text-[9.5px]">
-        <Link to="/resume#recognition" className="pointer-coarse:-my-2 pointer-coarse:py-2 flex items-center gap-1.5 text-[var(--accent)]">
+        <Link to="/resume#recognition" className="tap-target pointer-coarse:-my-2 pointer-coarse:py-2 flex items-center gap-1.5 text-[var(--accent)]">
           <PixelIcon name="trophy" size={12} instant />
           awards
         </Link>
         <span className="hidden sm:inline">{awardsText}</span>
         <Link
           to="/resume#recognition"
-          className="ml-auto underline decoration-[var(--text-muted)] underline-offset-4 pointer-coarse:-my-2 pointer-coarse:py-2 transition-colors duration-300 hover:text-[var(--text-primary)] hover:decoration-current"
+          className="tap-target ml-auto underline decoration-[var(--text-muted)] underline-offset-4 pointer-coarse:-my-2 pointer-coarse:py-2 transition-colors duration-300 hover:text-[var(--text-primary)] hover:decoration-current"
         >
           full list ↗
         </Link>

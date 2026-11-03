@@ -152,8 +152,13 @@ export default function ResumePage() {
       {/* section rail for phones and portrait iPads, where the sidebar is hidden */}
       <nav
         aria-label="resume sections"
-        className="lg:hidden sticky top-14 md:top-16 z-40 -mt-4 sm:-mt-6 mb-4 bg-[var(--nav-bg)] backdrop-blur-md"
+        className="lg:hidden relative sticky top-14 md:top-16 z-40 -mt-4 sm:-mt-6 mb-4 bg-[var(--nav-bg)] backdrop-blur-md"
       >
+        {/* the rail scrolls sideways on narrow phones; fade the edge so the cut-off chip reads as "more" */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[var(--bg-primary)] to-transparent"
+        />
         <div className="no-scrollbar max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-2 flex gap-1.5 overflow-x-auto">
           {SECTIONS.map(s => {
             const isActive = active === s.id;

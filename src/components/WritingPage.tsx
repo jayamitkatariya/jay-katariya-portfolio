@@ -110,7 +110,7 @@ export default function WritingPage() {
       <main className="mx-auto flex min-h-[70svh] max-w-3xl flex-col items-center justify-center px-4 text-center">
         <p className="font-mono text-[9px] tracking-[0.22em] text-[var(--text-tertiary)]">404 / note</p>
         <h1 className="mt-4 font-display text-4xl font-bold">nothing here.</h1>
-        <Link to="/writing" className="mt-6 font-mono text-[10px] tracking-[0.16em] text-[var(--text-secondary)] underline underline-offset-4">
+        <Link to="/writing" className="tap-target mt-6 font-mono text-[10px] tracking-[0.16em] text-[var(--text-secondary)] underline underline-offset-4">
           back to writing
         </Link>
       </main>
@@ -168,7 +168,7 @@ export default function WritingPage() {
             </div>
 
             <div className="mt-14 flex flex-wrap items-baseline justify-between gap-3 border-t border-[var(--border-primary)] pt-6 font-mono text-[9px] tracking-[0.18em] text-[var(--text-tertiary)] sm:mt-16 sm:text-[10px]">
-              <Link to="/writing" className="footer-link text-[var(--text-primary)]">
+              <Link to="/writing" className="tap-target footer-link text-[var(--text-primary)]">
                 ← all writing
               </Link>
               <span>more notes soon.</span>
@@ -209,7 +209,7 @@ export default function WritingPage() {
               <span>more notes soon.</span>
               <a
                 href="mailto:hi@jaykatariya.com?subject=writing"
-                className="footer-link text-[var(--text-primary)]"
+                className="tap-target footer-link text-[var(--text-primary)]"
               >
                 send me a topic ↗
               </a>
