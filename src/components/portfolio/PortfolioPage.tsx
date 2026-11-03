@@ -33,7 +33,7 @@ export default function PortfolioPage() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.35, ease: EASE }}
+          transition={{ duration: 0.4, delay: 0.1, ease: EASE }}
           className="order-2 flex flex-col justify-end gap-5 pb-10 sm:gap-6 lg:order-1 lg:col-span-5 lg:pb-16"
         >
           <span className="flex items-center gap-2.5 font-mono text-[11px] tracking-widest text-[var(--text-tertiary)]">

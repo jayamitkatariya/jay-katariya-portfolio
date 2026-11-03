@@ -99,6 +99,13 @@ html.dark {
   }
 }
 
+/* During the theme wipe the "new" snapshot is live, so colour transitions would still be
+   fading underneath the circle. Kill them for the duration (the orb keeps its own motion). */
+html.theme-switching,
+html.theme-switching *:not(.theme-orb > span) {
+  transition: none !important;
+}
+
 /* ── Theme orb: the sun sets, the moon rises (and back) ── */
 .theme-orb {
   position: relative;
@@ -111,8 +118,7 @@ html.dark {
   inset: 0;
   display: grid;
   place-items: center;
-  will-change: transform, opacity;
-  transition: transform 0.7s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.45s ease;
+  transition: transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.35s ease;
 }
 .theme-orb__sun {
   opacity: 1;
@@ -422,7 +428,7 @@ section[id] {
   background: var(--tear-paper);
   filter: drop-shadow(0 0 1px var(--tear-edge)) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
   will-change: transform;
-  transition: transform 950ms cubic-bezier(0.7, 0, 0.3, 1);
+  transition: transform 500ms cubic-bezier(0.7, 0, 0.3, 1);
 }
 .paper-tear[data-phase="open"] .paper-tear__top {
   transform: translateY(-104%) rotate(-1.1deg);
@@ -502,5 +508,7 @@ section[id] {
   text-underline-offset: 3px;
   transition: text-decoration-color 0.2s;
 }
-.agent-doc a:hover,
-.agent-doc .agent-link:hover { text-decoration-color: currentColor; }
+@media (hover: hover) and (pointer: fine) {
+  .agent-doc a:hover,
+  .agent-doc .agent-link:hover { text-decoration-color: currentColor; }
+}

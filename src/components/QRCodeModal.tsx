@@ -56,11 +56,12 @@ export default function QRCodeModal({ isOpen, onClose }: QRCodeModalProps) {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.17, ease: [0.4, 0, 0.6, 1] } }}
             transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
             role="dialog"
             aria-modal="true"
             aria-label="save my contact"
+            aria-busy={!qrUrl && !failed}
             className="relative mx-4 max-h-[calc(100dvh-2rem)]"
             onClick={(e) => e.stopPropagation()}
           >
@@ -69,19 +70,27 @@ export default function QRCodeModal({ isOpen, onClose }: QRCodeModalProps) {
                 ref={closeRef}
                 onClick={onClose}
                 aria-label="close"
-                className="absolute top-1.5 right-1.5 w-10 h-10 grid place-items-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--bg-secondary)]"
+                className="absolute top-1.5 right-1.5 w-10 h-10 grid place-items-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-[color,background-color,border-color,scale] duration-150 ease-out active:scale-[0.96] rounded-full hover:bg-[var(--bg-secondary)]"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
 
-              {qrUrl && (
+              {qrUrl ? (
                 <img
                   src={qrUrl}
                   alt="QR Code - Save Jay's Contact"
                   className="w-[min(12rem,50dvh)] h-[min(12rem,50dvh)] sm:w-[min(14rem,50dvh)] sm:h-[min(14rem,50dvh)] rounded-xl"
                 />
+              ) : (
+                !failed && (
+                  // holds the code's space so the dialog doesn't grow when it arrives
+                  <div
+                    aria-hidden="true"
+                    className="w-[min(12rem,50dvh)] h-[min(12rem,50dvh)] sm:w-[min(14rem,50dvh)] sm:h-[min(14rem,50dvh)] rounded-xl"
+                  />
+                )
               )}
 
               <div className="text-center">

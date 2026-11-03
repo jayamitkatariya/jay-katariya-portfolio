@@ -84,11 +84,23 @@ export default function HeroCity({ isDark }: { isDark: boolean }) {
             </span>
           </div>
 
-          <div className="pointer-events-auto flex items-center gap-0.5 rounded-full border border-[var(--border-primary)]/80 bg-[var(--bg-primary)]/70 p-0.5 font-mono text-[8.5px] tracking-widest text-[var(--text-secondary)] backdrop-blur-sm sm:text-[9px]">
+          {/* phones keep only the clock plus an icon-only pause (the city must stay stoppable);
+              the full bird/pause/count pill lives on wider screens */}
+          <button
+            type="button"
+            onClick={() => setPaused((p) => !p)}
+            className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-[var(--border-primary)]/80 bg-[var(--bg-primary)]/70 text-[var(--text-secondary)] backdrop-blur-sm transition-[color,scale] duration-150 ease-out active:scale-[0.96] sm:hidden"
+            aria-label={paused ? 'animate the city' : 'pause the city'}
+            aria-pressed={paused}
+          >
+            {paused ? <Play size={10} strokeWidth={1.8} /> : <Pause size={10} strokeWidth={1.8} />}
+          </button>
+
+          <div className="pointer-events-auto hidden items-center gap-0.5 rounded-full border border-[var(--border-primary)]/80 bg-[var(--bg-primary)]/70 p-0.5 font-mono text-[8.5px] tracking-widest text-[var(--text-secondary)] backdrop-blur-sm sm:flex sm:text-[9px]">
             <button
               type="button"
               onClick={() => cityRef.current?.sendBird()}
-              className="grid min-h-8 w-8 place-items-center rounded-full transition-colors hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] pointer-coarse:min-h-11 pointer-coarse:w-11"
+              className="relative after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] grid min-h-8 w-8 place-items-center rounded-full transition-[color,background-color,scale] duration-150 ease-out active:scale-[0.96] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] pointer-coarse:min-h-11 pointer-coarse:w-11"
               aria-label="send a bird"
               title="send a bird"
             >
@@ -97,14 +109,14 @@ export default function HeroCity({ isDark }: { isDark: boolean }) {
             <button
               type="button"
               onClick={() => setPaused((p) => !p)}
-              className="flex min-h-8 items-center gap-1.5 rounded-full px-2.5 py-1.5 transition-colors hover:text-[var(--text-primary)] pointer-coarse:min-h-11"
+              className="relative after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] flex min-h-8 items-center gap-1.5 rounded-full px-2.5 py-1.5 transition-[color,background-color,scale] duration-150 ease-out active:scale-[0.96] hover:text-[var(--text-primary)] pointer-coarse:min-h-11"
               aria-label={paused ? 'animate the city' : 'pause the city'}
               aria-pressed={paused}
             >
               {paused ? <Play size={10} strokeWidth={1.8} /> : <Pause size={10} strokeWidth={1.8} />}
               <span>{paused ? 'animate' : 'pause'}</span>
             </button>
-            <span className="pr-2 pl-1 text-[var(--text-tertiary)]" aria-live="polite">
+            <span className="pr-2 pl-1 text-[var(--text-tertiary)]" aria-live="off">
               {birds} birds
             </span>
           </div>

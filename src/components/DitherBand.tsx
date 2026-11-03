@@ -29,6 +29,16 @@ const CURSOR = 3;
 
 export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark, text, className = '' }: DitherBandProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // the theme is read through a ref so a toggle repaints in place instead of tearing
+  // the band down and replaying the develop + typing animation
+  const isDarkRef = useRef(isDark);
+  const restyleRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    if (isDarkRef.current === isDark) return;
+    isDarkRef.current = isDark;
+    restyleRef.current?.();
+  }, [isDark]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -111,7 +121,7 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
             on = false;
           } else {
             // ink where the photo is dark on a light page, where it's bright on a dark page
-            const tone = isDark ? luma[i] : (1 - luma[i]) * 0.8;
+            const tone = isDarkRef.current ? luma[i] : (1 - luma[i]) * 0.8;
             on = tone * env - bias > bayerAt(x, y);
           }
           if (on) {
@@ -130,7 +140,7 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
 
     const blink = () => {
       clearTimeout(blinkTimer);
-      if (!word || reduced || !visible || typed < word.charStarts.length - 1) return;
+      if (!word || reduced || !visible || document.hidden || typed < word.charStarts.length - 1) return;
       const now = performance.now();
       cursorOn = Math.floor((now - typeEndAt) / BLINK) % 2 === 0;
       render();
@@ -170,7 +180,7 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
       h = Math.max(16, Math.ceil(canvas.height / cell));
       buf.width = w;
       buf.height = h;
-      luma = sampleLuma(img, w, h, focusY, isDark ? 1.5 : 1.15);
+      luma = sampleLuma(img, w, h, focusY, isDarkRef.current ? 1.5 : 1.15);
       if (word) {
         const fit = Math.min((w * 0.7) / (gridCols - PAD * 2), (h * 0.36) / FONT_ROWS);
         scale = Math.max(2, Math.floor(fit));
@@ -181,6 +191,11 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
     };
 
     setup();
+    restyleRef.current = setup; // re-samples with the new contrast, keeps reveal/typing progress
+
+    // a hidden tab still runs throttled timeouts; stop the blink there entirely
+    const onVisibility = () => (document.hidden ? clearTimeout(blinkTimer) : blink());
+    document.addEventListener('visibilitychange', onVisibility);
 
     const io = new IntersectionObserver(([e]) => {
       visible = e.isIntersecting;
@@ -203,12 +218,14 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
 
     return () => {
       cancelled = true;
+      restyleRef.current = null;
       cancelAnimationFrame(raf);
       clearTimeout(blinkTimer);
+      document.removeEventListener('visibilitychange', onVisibility);
       io.disconnect();
       ro.disconnect();
     };
-  }, [src, color, pixel, focusY, isDark, text]);
+  }, [src, color, pixel, focusY, text]);
 
   return <canvas ref={canvasRef} aria-hidden="true" className={`block w-full ${className}`} />;
 }

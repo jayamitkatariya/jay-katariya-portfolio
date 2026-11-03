@@ -73,6 +73,11 @@ export default defineConfig(() => {
     },
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
+      // browser binaries and test artifacts sometimes land in the project root and
+      // the watcher then churns through hundreds of MB (and errors when they vanish)
+      watch: {
+        ignored: ['**/.pw-browsers/**', '**/playwright-report/**', '**/test-results/**'],
+      },
     },
   };
 });

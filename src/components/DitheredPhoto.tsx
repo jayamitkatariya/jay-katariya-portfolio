@@ -41,18 +41,34 @@ export default function DitheredPhoto({ src, className = '', pixel = 1.6, focusY
       onReadyRef.current?.();
     };
 
-    draw();
-    // redraw only on meaningful size changes (tiles spring-animate their size)
+    // don't fetch or dither until the print is about to scroll into view
     let t: ReturnType<typeof setTimeout>;
-    const ro = new ResizeObserver(() => {
-      clearTimeout(t);
-      t = setTimeout(draw, 120);
-    });
-    ro.observe(canvas);
+    let ro: ResizeObserver | null = null;
+    const start = () => {
+      draw();
+      // redraw only on meaningful size changes
+      ro = new ResizeObserver(() => {
+        clearTimeout(t);
+        t = setTimeout(draw, 120);
+      });
+      ro.observe(canvas);
+    };
+    let io: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver === 'undefined') start();
+    else {
+      io = new IntersectionObserver(entries => {
+        if (!entries.some(e => e.isIntersecting)) return;
+        io?.disconnect();
+        io = null;
+        start();
+      }, { rootMargin: '300px' });
+      io.observe(canvas);
+    }
     return () => {
       cancelled = true;
       clearTimeout(t);
-      ro.disconnect();
+      io?.disconnect();
+      ro?.disconnect();
     };
   }, [src, pixel, focusY]);
 

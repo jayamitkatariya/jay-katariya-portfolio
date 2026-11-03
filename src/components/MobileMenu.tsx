@@ -60,9 +60,10 @@ export default function MobileMenu({
           key="sheet"
           id="mobile-menu"
           ref={panelRef}
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
+          // clip-path reveals the sheet top-down like the old height tween, without re-laying it out each frame
+          initial={{ clipPath: 'inset(0 0 100% 0)', opacity: 0 }}
+          animate={{ clipPath: 'inset(0 0 0% 0)', opacity: 1 }}
+          exit={{ clipPath: 'inset(0 0 100% 0)', opacity: 0, transition: { duration: 0.17, ease: [0.4, 0, 0.6, 1] } }}
           transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
           className="absolute left-0 top-full max-h-[calc(100svh-3.5rem)] w-full overflow-y-auto overscroll-contain border-b border-[var(--border-primary)] bg-[var(--bg-primary)] sm:hidden"
         >

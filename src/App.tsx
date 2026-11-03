@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, Suspense } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router';
 import { motion, AnimatePresence, MotionConfig } from 'motion/react';
 import { Menu, X } from 'lucide-react';
@@ -25,15 +25,50 @@ import SelectedWork from './components/SelectedWork';
 import Filmstrip from './components/Filmstrip';
 import ContactSection from './components/ContactSection';
 import MobileMenu, { PAGES } from './components/MobileMenu';
-import { useBodyScrollLock } from './hooks/useBodyScrollLock';
+import WritingPage from './components/WritingPage';
+import { useBodyScrollLock, isScrollLocked } from './hooks/useBodyScrollLock';
+import { lazyWithRetry } from './lib/lazyWithRetry';
 
-// Route-level + heavy components load on demand to keep the first paint light
-const PortfolioPage = lazy(() => import('./components/portfolio/PortfolioPage'));
-const MemoriesPage = lazy(() => import('./components/MemoriesPage'));
-const ResumePage = lazy(() => import('./components/ResumePage'));
-const WritingPage = lazy(() => import('./components/WritingPage'));
-const QRCodeModal = lazy(() => import('./components/QRCodeModal'));
+// Route-level + heavy components load on demand to keep the first paint light.
+// Writing deliberately stays in the main bundle: it's tiny, it's a primary nav
+// destination, and a failed lazy import left phones showing the error panel.
+const PortfolioPage = lazyWithRetry(() => import('./components/portfolio/PortfolioPage'));
+const MemoriesPage = lazyWithRetry(() => import('./components/MemoriesPage'));
+const ResumePage = lazyWithRetry(() => import('./components/ResumePage'));
+const QRCodeModal = lazyWithRetry(() => import('./components/QRCodeModal'));
 const PageFallback = () => <div className="min-h-screen" />;
+
+// Page transitions. Exits are shorter and use a symmetric curve, so the old page
+// actually fades rather than snapping out; keyboard navigation skips motion entirely.
+// The leaving page reads `instant` through AnimatePresence's `custom`, since its own
+// props are frozen at the render before the navigation.
+const EASE_OUT = [0.23, 1, 0.32, 1] as const;
+const EASE_EXIT = [0.4, 0, 0.6, 1] as const;
+type PageMotion = { instant: boolean };
+const pageVariants = (lift: boolean) => ({
+  initial: { opacity: 0, ...(lift ? { y: 20 } : {}) },
+  enter: ({ instant }: PageMotion) => ({
+    opacity: 1,
+    ...(lift ? { y: 0 } : {}),
+    transition: instant ? { duration: 0 } : { duration: 0.35, ease: EASE_OUT },
+  }),
+  exit: ({ instant }: PageMotion) => ({
+    opacity: 0,
+    ...(lift ? { y: -20 } : {}),
+    transition: instant ? { duration: 0 } : { duration: 0.2, ease: EASE_EXIT },
+  }),
+});
+const LIFT = pageVariants(true);
+const FADE = pageVariants(false);
+
+const INTRO_KEY = 'intro-seen';
+const introSeen = () => {
+  try {
+    return sessionStorage.getItem(INTRO_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
 
 type Page = 'home' | 'portfolio' | 'writing' | 'memories' | 'resume' | 'notfound';
 
@@ -64,31 +99,64 @@ export default function App() {
     }
   })();
 
-  const goToPage = useCallback((page: 'home' | 'portfolio' | 'writing' | 'memories' | 'resume') => {
+  // keyboard shortcuts navigate with `instant`, which skips the wipe and the page fade
+  const goToPage = useCallback((page: 'home' | 'portfolio' | 'writing' | 'memories' | 'resume', instant = false) => {
     const paths = { home: '/', portfolio: '/portfolio', writing: '/writing', memories: '/memories', resume: '/resume' } as const;
-    navigate(paths[page]);
+    navigate(paths[page], instant ? { state: { instant: true } } : undefined);
   }, [navigate]);
+  const pageMotion: PageMotion = { instant: (location.state as { instant?: boolean } | null)?.instant === true };
 
-  // Page changes: hash links land on their section, everything else starts at the top.
-  useEffect(() => {
-    if (!location.hash) {
+  // Hash links land on their section, everything else starts at the top.
+  const scrollTimerRef = useRef(0);
+  const scrollToTarget = useCallback((hash: string) => {
+    window.clearTimeout(scrollTimerRef.current);
+    if (!hash) {
       window.scrollTo({ top: 0, behavior: 'instant' });
       return;
     }
-    const id = decodeURIComponent(location.hash.slice(1));
+    const id = decodeURIComponent(hash.slice(1));
     let tries = 0;
-    let timer = 0;
     const tick = () => {
       const el = document.getElementById(id);
       if (el) {
         el.scrollIntoView({ block: 'start', behavior: 'instant' });
         return;
       }
-      if (tries++ < 24) timer = window.setTimeout(tick, 80);
+      if (tries++ < 24) scrollTimerRef.current = window.setTimeout(tick, 80);
     };
     tick();
-    return () => window.clearTimeout(timer);
-  }, [location.pathname, location.hash]);
+  }, []);
+  useEffect(() => () => window.clearTimeout(scrollTimerRef.current), []);
+
+  // When the page itself changes, wait for the old one to finish fading out: scrolling
+  // now would make it visibly jump to its top mid-exit. Same-page changes (a hash, or a
+  // writing article) scroll straight away.
+  // Recorded during render, not in an effect: an instant (keyboard) exit can finish
+  // before effects run, and onExitComplete would find nothing pending.
+  const prevPageRef = useRef<Page | null>(null);
+  const pendingScrollRef = useRef<string | null>(null);
+  if (prevPageRef.current !== currentPage) {
+    if (prevPageRef.current !== null) pendingScrollRef.current = location.hash;
+    prevPageRef.current = currentPage;
+  }
+  useEffect(() => {
+    if (pendingScrollRef.current !== null) return; // the exit hands off to handlePageExitComplete
+    scrollToTarget(location.hash);
+  }, [currentPage, location.pathname, location.hash, scrollToTarget]);
+
+  const handlePageExitComplete = useCallback(() => {
+    const hash = pendingScrollRef.current;
+    if (hash === null) return;
+    pendingScrollRef.current = null;
+    scrollToTarget(hash);
+    // the link that was clicked usually unmounted with the old page; put focus on the new
+    // one so the next Tab starts there instead of back at the top of the document
+    requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if (active && active !== document.body && active.isConnected) return;
+      document.querySelector<HTMLElement>('[data-page]')?.focus({ preventScroll: true });
+    });
+  }, [scrollToTarget]);
 
   useEffect(() => {
     document.title = PAGE_TITLES[currentPage];
@@ -109,7 +177,11 @@ export default function App() {
   // The nav is transparent over the hero, then picks up its paper layer on scroll.
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => {
+      // a modal pins the body, which reads as scrollY 0; that isn't the reader scrolling up
+      if (isScrollLocked()) return;
+      setScrolled(window.scrollY > 20);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -117,8 +189,12 @@ export default function App() {
   const navSolid = currentPage !== 'home' || scrolled;
 
   const { isAgent, setAgent } = useAgentMode();
-  // agent mode is for reading, not for intros
-  const [isLoading, setIsLoading] = useState(() => !isAgent);
+  // agent mode is for reading, not for intros; and the intro plays once per session,
+  // not on every reload or deep link
+  const [isLoading, setIsLoading] = useState(() => !isAgent && !introSeen());
+  useEffect(() => {
+    if (!isLoading) markAppReady();
+  }, [isLoading]);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQR, setShowQR] = useState(false);
   // the phone menu: one sheet, one open state
@@ -160,6 +236,9 @@ export default function App() {
   };
 
   const handleLoadingComplete = useCallback(() => {
+    try {
+      sessionStorage.setItem(INTRO_KEY, '1');
+    } catch {}
     setIsLoading(false);
     markAppReady();
   }, []);
@@ -182,7 +261,7 @@ export default function App() {
   }, [currentPage]);
 
   const shortcutActions = useMemo(() => ({
-    setPage: (page: 'home' | 'portfolio' | 'writing' | 'memories' | 'resume') => goToPage(page),
+    setPage: (page: 'home' | 'portfolio' | 'writing' | 'memories' | 'resume') => goToPage(page, true),
     toggleHelp: () => {
       // state, not just the DOM: the lazily-loaded qr modal has a beat where it is
       // open but not mounted yet, and `?` must not stack the help dialog on top of it
@@ -298,7 +377,7 @@ export default function App() {
             aria-expanded={menuOpen}
             aria-controls={menuOpen ? 'mobile-menu' : undefined}
             aria-label={menuOpen ? 'close menu' : 'open menu'}
-            className="grid h-11 w-11 place-items-center rounded-full text-[var(--text-primary)] transition-colors active:bg-[var(--bg-secondary)] sm:hidden"
+            className="grid h-11 w-11 place-items-center rounded-full text-[var(--text-primary)] transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] active:bg-[var(--bg-secondary)] sm:hidden"
           >
             {menuOpen ? <X size={19} strokeWidth={1.7} /> : <Menu size={19} strokeWidth={1.7} />}
           </button>
@@ -313,15 +392,18 @@ export default function App() {
       </nav>
 
       <ErrorBoundary resetKey={location.pathname}>
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" custom={pageMotion} onExitComplete={handlePageExitComplete}>
         {currentPage === 'notfound' && (
           <motion.main
             key="notfound"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-            className="min-h-[80svh] flex flex-col items-center justify-center text-center px-4 pt-24"
+            variants={LIFT}
+            custom={pageMotion}
+            initial="initial"
+            animate="enter"
+            exit="exit"
+            data-page
+            tabIndex={-1}
+            className="outline-none min-h-[80svh] flex flex-col items-center justify-center text-center px-4 pt-24"
           >
             <p className="font-mono text-xs tracking-widest text-[var(--text-tertiary)] mb-4">error 404</p>
             <h1 className="font-display font-bold tracking-normal text-5xl sm:text-7xl mb-4">lost the plot.</h1>
@@ -335,22 +417,30 @@ export default function App() {
         {currentPage === 'writing' && (
           <motion.div
             key="writing"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+            variants={LIFT}
+            custom={pageMotion}
+            initial="initial"
+            animate="enter"
+            exit="exit"
+            data-page
+            tabIndex={-1}
+            className="outline-none"
           >
-            <Suspense fallback={<PageFallback />}><WritingPage /></Suspense>
+            <WritingPage />
           </motion.div>
         )}
 
         {currentPage === 'memories' && (
           <motion.div
             key="memories"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+            variants={LIFT}
+            custom={pageMotion}
+            initial="initial"
+            animate="enter"
+            exit="exit"
+            data-page
+            tabIndex={-1}
+            className="outline-none"
           >
             <Suspense fallback={<PageFallback />}><MemoriesPage /></Suspense>
           </motion.div>
@@ -359,10 +449,14 @@ export default function App() {
         {currentPage === 'portfolio' && (
           <motion.div
             key="portfolio"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+            variants={LIFT}
+            custom={pageMotion}
+            initial="initial"
+            animate="enter"
+            exit="exit"
+            data-page
+            tabIndex={-1}
+            className="outline-none"
           >
             <Suspense fallback={<PageFallback />}><PortfolioPage /></Suspense>
           </motion.div>
@@ -371,10 +465,14 @@ export default function App() {
         {currentPage === 'resume' && (
           <motion.div
             key="resume"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+            variants={LIFT}
+            custom={pageMotion}
+            initial="initial"
+            animate="enter"
+            exit="exit"
+            data-page
+            tabIndex={-1}
+            className="outline-none"
           >
             <Suspense fallback={<PageFallback />}><ResumePage /></Suspense>
           </motion.div>
@@ -383,10 +481,14 @@ export default function App() {
         {currentPage === 'home' && (
           <motion.div
             key="home"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+            variants={FADE}
+            custom={pageMotion}
+            initial="initial"
+            animate="enter"
+            exit="exit"
+            data-page
+            tabIndex={-1}
+            className="outline-none"
           >
             <HeroCity isDark={isDark} />
             <main>

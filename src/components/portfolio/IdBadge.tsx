@@ -113,11 +113,21 @@ function StaticBadge({ src }: { src: string }) {
   );
 }
 
+// Data saver on: skip the ~1MB three.js + rapier download and show the static card
+function saveData() {
+  try {
+    return !!(navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
+  } catch {
+    return false;
+  }
+}
+
 export default function IdBadge({ className = '' }: { className?: string }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [textures, setTextures] = useState<Textures | null>(null);
   const [frontUrl, setFrontUrl] = useState<string | null>(null);
-  const [use3D, setUse3D] = useState(() => canUseWebGL() && !prefersReducedMotion());
+  const [use3D, setUse3D] = useState(() => canUseWebGL() && !prefersReducedMotion() && !saveData());
+  const [near, setNear] = useState(false); // stage is on or near screen
   const [ready3D, setReady3D] = useState(false);
   const [placeholder, setPlaceholder] = useState(!use3D);
   const [active, setActive] = useState(true);
@@ -139,10 +149,11 @@ export default function IdBadge({ className = '' }: { className?: string }) {
     };
   }, []);
 
-  // start the 3D chunk now, in parallel with fonts / photo / texture drawing, instead of after them
+  // start the 3D chunk once the stage is near the viewport, in parallel with fonts / photo /
+  // texture drawing; a real failure surfaces through the lazy import's error boundary
   useEffect(() => {
-    if (use3D) load3D().catch(() => {}); // a real failure surfaces through the lazy import's error boundary
-  }, [use3D]);
+    if (use3D && near) load3D().catch(() => {});
+  }, [use3D, near]);
 
   useEffect(() => {
     let cancelled = false;
@@ -172,9 +183,13 @@ export default function IdBadge({ className = '' }: { className?: string }) {
 
   useEffect(() => {
     if (!use3D || ready3D || !shown) return;
+    if (!near) {
+      setPlaceholder(true);
+      return;
+    }
     const t = setTimeout(() => setPlaceholder(true), PLACEHOLDER_DELAY);
     return () => clearTimeout(t);
-  }, [use3D, ready3D, shown]);
+  }, [use3D, ready3D, shown, near]);
 
   // Stop rendering when the badge is offscreen or the tab is hidden
   useEffect(() => {
@@ -187,9 +202,21 @@ export default function IdBadge({ className = '' }: { className?: string }) {
       update();
     });
     io.observe(el);
+    // a wider margin decides when the 3D chunk is worth fetching at all
+    const nearIo = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setNear(true);
+          nearIo.disconnect();
+        }
+      },
+      { rootMargin: '400px 0px' },
+    );
+    nearIo.observe(el);
     document.addEventListener('visibilitychange', update);
     return () => {
       io.disconnect();
+      nearIo.disconnect();
       document.removeEventListener('visibilitychange', update);
     };
   }, []);
@@ -224,7 +251,7 @@ export default function IdBadge({ className = '' }: { className?: string }) {
         </div>
       )}
 
-      {use3D && textures && (
+      {use3D && near && textures && (
         // WebGL / WASM / chunk failures land on the static card instead of blanking the page
         <ErrorBoundary fallback={null} onError={fallBackToStatic}>
           <Suspense fallback={null}>

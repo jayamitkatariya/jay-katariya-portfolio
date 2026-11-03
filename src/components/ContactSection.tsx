@@ -61,7 +61,7 @@ export default function ContactSection({ onSaveContact }: { onSaveContact: () =>
           onClick={copy}
           aria-label={copied ? 'email copied' : 'copy email address'}
           data-cursor-label={copied ? 'copied' : 'copy'}
-          className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border-primary)] text-[var(--text-tertiary)] transition-colors duration-300 hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] pointer-coarse:h-11 pointer-coarse:w-11"
+          className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border-primary)] text-[var(--text-tertiary)] transition-[color,background-color,border-color,scale] duration-150 ease-out active:scale-[0.96] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] pointer-coarse:h-11 pointer-coarse:w-11"
         >
           {copied ? <Check size={13} strokeWidth={1.8} /> : <Copy size={12} strokeWidth={1.5} />}
         </button>

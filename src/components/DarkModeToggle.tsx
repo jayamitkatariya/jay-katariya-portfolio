@@ -27,6 +27,9 @@ export default function DarkModeToggle({ isDark, onToggle }: DarkModeToggleProps
     document.documentElement.style.setProperty('--toggle-x', `${x}px`);
     document.documentElement.style.setProperty('--toggle-y', `${y}px`);
 
+    // colour transitions off while the wipe runs, so it uncovers the finished theme
+    const root = document.documentElement;
+    root.classList.add('theme-switching');
     // flushSync so the new theme is committed before the "after" snapshot is taken
     const transition = (document as any).startViewTransition(() => {
       flushSync(onToggle);
@@ -34,6 +37,8 @@ export default function DarkModeToggle({ isDark, onToggle }: DarkModeToggleProps
     // clicking again mid-animation skips the running transition, which rejects `ready`;
     // the theme still changed, so there's nothing to handle
     transition.ready?.catch(() => {});
+    const done = () => root.classList.remove('theme-switching');
+    (transition.finished ?? Promise.resolve()).then(done, done);
   };
 
   // the nav has no spare width at 320px, so the touch hit area grows invisibly instead
@@ -41,7 +46,7 @@ export default function DarkModeToggle({ isDark, onToggle }: DarkModeToggleProps
     <button
       ref={buttonRef}
       onClick={handleToggle}
-      className="relative grid h-9 w-9 place-items-center rounded-full pointer-coarse:h-11 pointer-coarse:w-11 hover:bg-[var(--bg-secondary)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--text-primary)] pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5 pointer-coarse:after:content-['']"
+      className="relative grid h-9 w-9 place-items-center rounded-full pointer-coarse:h-11 pointer-coarse:w-11 hover:bg-[var(--bg-secondary)] transition-[color,background-color,scale] duration-150 ease-out active:scale-[0.96] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5 pointer-coarse:after:content-['']"
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       <span className="theme-orb" data-dark={isDark} aria-hidden="true">

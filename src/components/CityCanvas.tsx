@@ -1,10 +1,12 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { bayerAt } from '../lib/dither';
+import { onAppReady } from '../lib/appReady';
 
 // A living 1-bit city: three skyline layers, a clock tower showing Lafayette
 // time, a river of window light, a plane, small stars, a sun/moon that follows
 // the theme — and birds. Click the sky and one flies out, lands on a free
-// rooftop and stays. Every shape is drawn on a grid, so it stays crisp.
+// rooftop and stays. Scroll down and the whole flock lifts off; scroll back to
+// the top and they swoop home. Every shape is drawn on a grid, so it stays crisp.
 
 export interface CityHandle {
   sendBird: () => void;
@@ -189,7 +191,7 @@ interface Perch {
 }
 
 interface Bird {
-  state: 'flying' | 'perched';
+  state: 'flying' | 'perched' | 'leaving' | 'away';
   x: number;
   y: number;
   fromX: number;
@@ -232,6 +234,7 @@ interface Scene {
   stars: Star[];
   perches: Perch[];
   birds: Bird[];
+  birdsAway: boolean;
   particles: Particle[];
   tower: { x: number; w: number; top: number };
   dome: { x: number; w: number; baseY: number; r: number };
@@ -465,6 +468,7 @@ function buildScene(w: number, h: number): Scene {
     stars,
     perches,
     birds: [],
+    birdsAway: false,
     particles: [],
     tower: { x: towerX, w: towerW, top: towerTop },
     dome: { x: domeX, w: domeW, baseY: domeBaseY, r: domeR },
@@ -496,6 +500,7 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
   const stopRef = useRef<() => void>(() => {});
   const sendRef = useRef<() => void>(() => {});
   const beginSkyRef = useRef<() => void>(() => {});
+  const syncScrollRef = useRef<(force?: boolean) => void>(() => {});
 
   darkRef.current = isDark;
   cbRef.current = { onBirdsChange };
@@ -507,6 +512,8 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       paintRef.current();
     } else {
       startRef.current();
+      // if the page was paused mid-flight, match the flock to where the page is now
+      syncScrollRef.current(true);
     }
   }, [paused]);
 
@@ -539,6 +546,9 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
     let last = 0;
     let inView = true;
     let disposed = false;
+    // the first frame is painted straight away, but the loop waits until the loading
+    // screen is gone so it doesn't burn frames underneath it
+    let appReady = false;
 
 
     const pixel = (x: number, y: number, pw = 1, phh = 1, color = '#fff', alpha = 1) => {
@@ -566,8 +576,10 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
     };
 
     const drawBird = (b: Bird, p: Palette) => {
+      if (b.state === 'away') return;
       const cell = scene?.cell ?? 6;
-      const frame = b.state === 'flying' ? (Math.sin(b.flap) > 0 ? FLAP_UP : FLAP_DOWN) : PERCHED;
+      const airborne = b.state === 'flying' || b.state === 'leaving';
+      const frame = airborne ? (Math.sin(b.flap) > 0 ? FLAP_UP : FLAP_DOWN) : PERCHED;
       const width = frame[0].length;
       const ox = Math.round(b.x) - Math.floor(width / 2);
       const oy = Math.round(b.y) - 1 - (b.hop > 0 ? 1 : 0);
@@ -578,7 +590,7 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
         for (let c = 0; c < width; c++) {
           if (!frame[r][c]) continue;
           const cx = b.dir < 0 ? width - 1 - c : c;
-          pixel(ox + cx, oy + r, 1, 1, p.bird, b.state === 'flying' ? 0.96 : 1);
+          pixel(ox + cx, oy + r, 1, 1, p.bird, airborne ? 0.96 : 1);
         }
       }
       if (b.state === 'perched') {
@@ -1013,23 +1025,27 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       }
 
       for (const b of s.birds) {
-        if (b.state === 'flying') {
+        if (b.state === 'flying' || b.state === 'leaving') {
           b.t += (dt * 1000) / b.dur;
-          b.flap += dt * 26;
+          b.flap += dt * (b.state === 'leaving' ? 30 : 26);
           if (b.t >= 1) {
             b.t = 1;
-            b.state = 'perched';
             b.x = b.tx;
             b.y = b.ty;
-            b.perch && (b.perch.taken = true);
-            b.nextIdle = s.time + 1.6 + Math.random() * 4;
-            if (!pausedRef.current) burst(b.x, b.y, 3);
+            if (b.state === 'leaving') {
+              b.state = 'away';
+            } else {
+              b.state = 'perched';
+              b.perch && (b.perch.taken = true);
+              b.nextIdle = s.time + 1.6 + Math.random() * 4;
+              if (!pausedRef.current) burst(b.x, b.y, 3);
+            }
           } else {
             const e = easeInOut(b.t);
             b.x = cubic(b.fromX, b.c1x, b.c2x, b.tx, e);
             b.y = cubic(b.fromY, b.c1y, b.c2y, b.ty, e);
           }
-        } else {
+        } else if (b.state === 'perched') {
           if (b.hop > 0) b.hop = Math.max(0, b.hop - dt);
           if (s.time > b.nextIdle) {
             b.hop = 0.24;
@@ -1058,7 +1074,7 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
     };
 
     const start = () => {
-      if (running || !scene || pausedRef.current || !inView || document.hidden) return;
+      if (running || !appReady || !scene || pausedRef.current || !inView || document.hidden) return;
       running = true;
       last = performance.now();
       raf = requestAnimationFrame(frame);
@@ -1068,14 +1084,82 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       cancelAnimationFrame(raf);
     };
 
+    // Scroll takes the flock with it: scrolling down lifts every perched (or
+    // arriving) bird out of the skyline; scrolling back toward the top brings
+    // them in from above to their own perches. Perches stay reserved while the
+    // birds are away, so the count never jumps around.
+    // takeoff sits well below the return line, so a direction change (trackpad
+    // momentum, iOS bounce) between the two can't flip the flock back and forth
+    const takeoffAt = () => Math.max(64, window.innerHeight * 0.1);
+    const returnAt = () => Math.max(24, window.innerHeight * 0.03);
+    const takeOff = () => {
+      const s = scene;
+      if (!s || s.birdsAway || pausedRef.current) return;
+      s.birdsAway = true;
+      for (const b of s.birds) {
+        if (b.state === 'away' || b.state === 'leaving') continue;
+        const drift = (Math.random() - 0.5) * Math.max(6, s.cols * 0.14);
+        const toX = Math.max(-4, Math.min(s.cols + 4, b.x + drift));
+        const toY = -6 - Math.random() * 5;
+        b.state = 'leaving';
+        b.fromX = b.x;
+        b.fromY = b.y;
+        b.c1x = b.x + drift * 0.2;
+        b.c1y = b.y - s.rows * (0.12 + Math.random() * 0.1);
+        b.c2x = toX;
+        b.c2y = toY + s.rows * (0.14 + Math.random() * 0.1);
+        b.tx = toX;
+        b.ty = toY;
+        b.t = 0;
+        b.dur = 900 + Math.random() * 650;
+        b.hop = 0;
+        if (Math.abs(drift) > 1) b.dir = drift > 0 ? 1 : -1;
+      }
+      start();
+    };
+
+    const land = () => {
+      const s = scene;
+      if (!s || !s.birdsAway || pausedRef.current) return;
+      s.birdsAway = false;
+      for (const b of s.birds) {
+        if (b.state !== 'away' && b.state !== 'leaving') continue;
+        const perch = b.perch;
+        if (!perch) {
+          b.state = 'away';
+          continue;
+        }
+        const from = { x: b.x, y: b.y };
+        const to = { x: perch.x, y: perch.y - 1 };
+        const midX = (from.x + to.x) / 2 + (Math.random() - 0.5) * 8;
+        const midY = Math.min(from.y, to.y) - (6 + Math.random() * 9);
+        b.state = 'flying';
+        b.fromX = from.x;
+        b.fromY = from.y;
+        b.c1x = from.x + (midX - from.x) * 0.4;
+        b.c1y = from.y + (midY - from.y) * 0.8;
+        b.c2x = to.x + (midX - to.x) * 0.35;
+        b.c2y = to.y + (midY - to.y) * 0.8;
+        b.tx = to.x;
+        b.ty = to.y;
+        b.t = 0;
+        b.dur = 1000 + Math.random() * 700;
+        b.dir = from.x <= to.x ? 1 : -1;
+        b.flap = Math.random() * Math.PI * 2;
+        perch.taken = true;
+      }
+      start();
+    };
+
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       const nw = Math.max(1, Math.round(rect.width));
       const nh = Math.max(1, Math.round(rect.height));
-      if (nw === w && nh === h && scene) return;
+      const ndpr = Math.min(window.devicePixelRatio || 1, 2);
+      if (nw === w && nh === h && ndpr === dpr && scene) return;
       w = nw;
       h = nh;
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = ndpr;
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1086,6 +1170,8 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       scene.skyToDark = darkRef.current;
       scene.skyT = 1;
       seed(prev);
+      // a fresh scene starts with the flock perched; match it to where the page is
+      syncScrollRef.current(true);
       draw();
       start();
     };
@@ -1114,6 +1200,34 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       else start();
     };
 
+    let lastScrollY = window.scrollY;
+    let scrollFrame = 0;
+    const syncScroll = (force = false) => {
+      const y = window.scrollY;
+      const down = y > lastScrollY + 0.5;
+      const up = y < lastScrollY - 0.5;
+      lastScrollY = y;
+      if (pausedRef.current || !scene) return;
+      if (force) {
+        if (y < returnAt() && scene.birdsAway) land();
+        else if (y > takeoffAt() && inView && !scene.birdsAway) takeOff();
+        return;
+      }
+      if (down && inView && y > takeoffAt() && !scene.birdsAway) takeOff();
+      else if (up && y < returnAt() && scene.birdsAway) land();
+    };
+    syncScrollRef.current = syncScroll;
+    const onScroll = () => {
+      // a modal's body scroll lock jumps scrollY to 0 and back; that isn't the reader scrolling
+      if (document.documentElement.hasAttribute('data-scroll-locked')) return;
+      if (scrollFrame) return;
+      scrollFrame = requestAnimationFrame(() => {
+        scrollFrame = 0;
+        if (!disposed) syncScroll();
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
     const io = new IntersectionObserver(
       ([entry]) => {
         inView = entry.isIntersecting;
@@ -1124,11 +1238,28 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
     );
     io.observe(canvas);
 
+    // rebuilding the scene is costly, so wait for the window to settle
+    let resizeTimer = 0;
     const ro = new ResizeObserver(() => {
       if (disposed) return;
-      resize();
+      if (!scene) return resize();
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => !disposed && resize(), 150);
     });
     ro.observe(canvas);
+
+    // moving to a screen with a different pixel density changes no box size, so
+    // the ResizeObserver never fires; listen for the density itself
+    let dprQuery: MediaQueryList | null = null;
+    const onDpr = () => {
+      dprQuery?.removeEventListener('change', onDpr);
+      if (disposed) return;
+      resize();
+      dprQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+      dprQuery.addEventListener('change', onDpr);
+    };
+    dprQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+    dprQuery.addEventListener('change', onDpr);
 
     canvas.addEventListener('click', onClick);
     document.addEventListener('visibilitychange', onVisibility);
@@ -1140,20 +1271,30 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
     beginSkyRef.current = beginSky;
 
     resize();
-    if (!pausedRef.current) start();
+    syncScroll(true);
+    const offReady = onAppReady(() => {
+      appReady = true;
+      start();
+    });
 
     return () => {
       disposed = true;
+      offReady();
+      clearTimeout(resizeTimer);
+      dprQuery?.removeEventListener('change', onDpr);
       stop();
       io.disconnect();
       ro.disconnect();
       canvas.removeEventListener('click', onClick);
       document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(scrollFrame);
       paintRef.current = () => {};
       startRef.current = () => {};
       stopRef.current = () => {};
       sendRef.current = () => {};
       beginSkyRef.current = () => {};
+      syncScrollRef.current = () => {};
     };
   }, []);
 
@@ -1163,7 +1304,6 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       aria-hidden="true"
       data-cursor-hover
       className="absolute inset-0 h-full w-full touch-pan-y"
-      style={{ cursor: 'none' }}
     />
   );
 });

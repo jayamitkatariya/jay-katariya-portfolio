@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import DitheredPhoto from './DitheredPhoto';
@@ -15,12 +15,23 @@ export default function Filmstrip() {
   const strip = useRef<HTMLDivElement>(null);
   const drag = useRef({ down: false, startX: 0, left: 0, moved: false });
   const [developed, setDeveloped] = useState<number | null>(null);
+  // the entrance stagger is for the first reveal only; prints scrolled to later arrive at once
+  const [staggerDone, setStaggerDone] = useState(false);
+  const staggerTimer = useRef(0);
+  useEffect(() => () => clearTimeout(staggerTimer.current), []);
+  const onFirstReveal = () => {
+    if (staggerDone || staggerTimer.current) return;
+    staggerTimer.current = window.setTimeout(() => setStaggerDone(true), 600);
+  };
+  const toggle = (n: number) => setDeveloped((d) => (d === n ? null : n));
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return;
     const el = strip.current;
     if (!el) return;
     drag.current = { down: true, startX: e.clientX, left: el.scrollLeft, moved: false };
+    // mandatory snapping fights a mouse drag frame by frame; let it snap once on release
+    el.style.scrollSnapType = 'none';
     el.setPointerCapture(e.pointerId);
   };
 
@@ -34,8 +45,12 @@ export default function Filmstrip() {
   };
 
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!drag.current.down) return;
     drag.current.down = false;
-    strip.current?.releasePointerCapture(e.pointerId);
+    const el = strip.current;
+    if (!el) return;
+    el.style.scrollSnapType = '';
+    if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
   };
 
   return (
@@ -78,15 +93,25 @@ export default function Filmstrip() {
                 initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.5, delay: i * 0.035, ease: [0.23, 1, 0.32, 1] }}
+                onViewportEnter={onFirstReveal}
+                transition={{ duration: 0.5, delay: staggerDone ? 0 : i * 0.035, ease: [0.23, 1, 0.32, 1] }}
               >
                 <motion.div
                   style={{ y: LIFT[i] }}
                   whileHover={{ scale: 1.03 }}
                   transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={developed === photo.n}
+                  aria-label={`develop photo ${photo.n} into color`}
                   onClick={() => {
                     if (drag.current.moved) return;
-                    setDeveloped((d) => (d === photo.n ? null : photo.n));
+                    toggle(photo.n);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key !== 'Enter' && e.key !== ' ') return;
+                    e.preventDefault();
+                    toggle(photo.n);
                   }}
                   className="group/polaroid relative w-fit select-none bg-[#f6f4ee] p-2 pb-8 shadow-[0_1px_2px_rgba(0,0,0,0.12),0_14px_30px_-12px_rgba(0,0,0,0.35)] transition-shadow duration-300 hover:shadow-[0_2px_4px_rgba(0,0,0,0.12),0_26px_44px_-16px_rgba(0,0,0,0.42)] sm:p-2.5 sm:pb-10"
                 >

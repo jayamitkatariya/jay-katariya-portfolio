@@ -9,7 +9,7 @@ const SHORTCUTS = [
   { key: '4', description: 'go to memories' },
   { key: '5', description: 'go to resume' },
   { key: '← →', description: 'browse photos (in a memory)' },
-  { key: 'a', description: 'agent mode' },
+  { key: 'shift a', description: 'agent mode' },
   { key: 'x', description: 'achievements' },
   { key: '?', description: 'show shortcuts' },
   { key: 'esc', description: 'close overlays' },
@@ -38,7 +38,7 @@ export default function KeyboardShortcuts({ isOpen, onClose }: { isOpen: boolean
             data-shortcuts-help
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.17, ease: [0.4, 0, 0.6, 1] } }}
             transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[81] w-[90vw] max-w-sm"
           >
@@ -49,7 +49,7 @@ export default function KeyboardShortcuts({ isOpen, onClose }: { isOpen: boolean
                   ref={closeRef}
                   onClick={onClose}
                   aria-label="close"
-                  className="-mr-2.5 w-10 h-10 grid place-items-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--bg-secondary)]"
+                  className="-mr-2.5 w-10 h-10 grid place-items-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-[color,background-color,border-color,scale] duration-150 ease-out active:scale-[0.96] rounded-full hover:bg-[var(--bg-secondary)]"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

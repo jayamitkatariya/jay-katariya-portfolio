@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 // Same gate as the `cursor: none` rule in index.css, so the two never disagree.
 // A touchscreen laptop with a mouse still gets the custom cursor.
 const FINE_POINTER = '(hover: hover) and (pointer: fine)';
+const RING = 32;
 const hasFinePointer = () => typeof window !== 'undefined' && window.matchMedia(FINE_POINTER).matches;
 
 // Dot + trailing ring. The loop only runs while the ring is catching up to the
@@ -30,7 +31,7 @@ export default function CustomCursor() {
 
     document.documentElement.classList.add('custom-cursor-active');
 
-    const s = { mouseX: -100, mouseY: -100, ringX: -100, ringY: -100, hovering: false, clicking: false, shown: false, label: '', lastLabel: '' };
+    const s = { mouseX: -100, mouseY: -100, ringX: -100, ringY: -100, scale: 1, hovering: false, clicking: false, shown: false, label: '', lastLabel: '' };
     let frameId = 0;
     let running = false;
 
@@ -38,10 +39,14 @@ export default function CustomCursor() {
       dot.style.transform = `translate(${s.mouseX - 3}px, ${s.mouseY - 3}px)`;
       s.ringX += (s.mouseX - s.ringX) * 0.15;
       s.ringY += (s.mouseY - s.ringY) * 0.15;
-      const size = s.clicking ? 20 : s.hovering ? 48 : 32;
-      ring.style.width = ring.style.height = `${size}px`;
-      ring.style.transform = `translate(${s.ringX - size / 2}px, ${s.ringY - size / 2}px)`;
-      ring.style.borderWidth = s.hovering ? '1.5px' : '1px';
+      // the ring stays a 32px box and grows/shrinks by transform only, eased here rather
+      // than by a CSS transition (which would fight the per-frame translate)
+      const target = (s.clicking ? 20 : s.hovering ? 48 : 32) / RING;
+      s.scale += (target - s.scale) * 0.3;
+      if (Math.abs(target - s.scale) < 0.002) s.scale = target;
+      ring.style.transform = `translate(${s.ringX - RING / 2}px, ${s.ringY - RING / 2}px) scale(${s.scale})`;
+      // keep the on-screen stroke what it was (1px, 1.5px on hover) whatever the scale
+      ring.style.borderWidth = `${(s.hovering ? 1.5 : 1) / s.scale}px`;
 
       const label = labelRef.current;
       if (label) {
@@ -53,7 +58,7 @@ export default function CustomCursor() {
         label.style.opacity = s.label ? '1' : '0';
       }
 
-      if (Math.abs(s.mouseX - s.ringX) + Math.abs(s.mouseY - s.ringY) < 0.3) {
+      if (Math.abs(s.mouseX - s.ringX) + Math.abs(s.mouseY - s.ringY) < 0.3 && s.scale === target) {
         running = false;
         return;
       }
@@ -111,7 +116,7 @@ export default function CustomCursor() {
       />
       <div
         ref={ringRef}
-        className={`fixed top-0 left-0 border border-white/40 mix-blend-difference rounded-full pointer-events-none z-[9999] transition-[width,height,opacity,border-width] duration-200 ease-out ${visible ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed top-0 left-0 w-8 h-8 border border-white/40 mix-blend-difference rounded-full pointer-events-none z-[9999] transition-opacity duration-200 ease-out ${visible ? 'opacity-100' : 'opacity-0'}`}
       />
       <div
         ref={labelRef}

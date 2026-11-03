@@ -25,7 +25,11 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
       const img = new Image();
       img.decoding = 'async';
       img.onload = () => resolve(img);
-      img.onerror = reject;
+      // a failed load must not stick for the whole session; let the next caller retry
+      img.onerror = e => {
+        imageCache.delete(src);
+        reject(e);
+      };
       img.src = src;
     });
     imageCache.set(src, p);

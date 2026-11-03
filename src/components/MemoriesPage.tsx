@@ -191,6 +191,9 @@ function preload(urls: string[]) {
 function PhotoLayer({ url, developDelay, still }: { url: string; developDelay: number; still: boolean }) {
   const [printed, setPrinted] = useState(still);
   const [developed, setDeveloped] = useState(still);
+  // once the colour is fully up, the print is invisible; unmount it so its canvas
+  // and ResizeObserver stop re-dithering on every swap
+  const [gone, setGone] = useState(still);
 
   useEffect(() => {
     if (still) return;
@@ -198,6 +201,12 @@ function PhotoLayer({ url, developDelay, still }: { url: string; developDelay: n
     const t = setTimeout(() => setDeveloped(true), printed ? developDelay : developDelay + 2500);
     return () => clearTimeout(t);
   }, [printed, developDelay, still]);
+
+  useEffect(() => {
+    if (!developed || gone) return;
+    const t = setTimeout(() => setGone(true), 750); // the 700ms fade below, plus a frame
+    return () => clearTimeout(t);
+  }, [developed, gone]);
 
   return (
     <motion.div
@@ -214,7 +223,7 @@ function PhotoLayer({ url, developDelay, still }: { url: string; developDelay: n
         decoding="async"
         className="absolute inset-0 w-full h-full object-cover select-none"
       />
-      {!still && (
+      {!gone && (
         <DitheredPhoto
           src={url}
           pixel={1.8}
@@ -240,8 +249,10 @@ function MemoryTile({ item, enterDelay, still, onOpen }: TileProps) {
       role="button"
       tabIndex={0}
       aria-label={`open memory ${item.photoNum}`}
-      initial={{ opacity: 0, x: item.x, y: item.y, width: item.w, height: item.h }}
-      animate={{ opacity: 1, x: item.x, y: item.y, width: item.w, height: item.h }}
+      // size is set directly; only position springs (animating width/height relayouts every frame)
+      style={{ width: item.w, height: item.h }}
+      initial={{ opacity: 0, x: item.x, y: item.y }}
+      animate={{ opacity: 1, x: item.x, y: item.y }}
       transition={{
         opacity: { duration: 0.01, delay: enterDelay / 1000 },
         default: { type: 'spring', stiffness: 140, damping: 24 },
@@ -323,6 +334,8 @@ export default function MemoriesPage() {
   // ── Autoplay: pausable, and pauses itself on hover / hidden tab / lightbox ──
   const [userPaused, setUserPaused] = useState(false);
   const [hovering, setHovering] = useState(false);
+  // keyboard focus inside the grid pauses too, so a focused tile isn't swapped out from under it
+  const [focusInside, setFocusInside] = useState(false);
   const [lbPhoto, setLbPhoto] = useState<number | null>(null);
   // Release the lock (and drop the lightbox) as soon as the page starts leaving: otherwise the
   // unlock's scroll restore lands on the incoming page, after App has scrolled it to the top.
@@ -335,7 +348,7 @@ export default function MemoriesPage() {
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
   }, []);
-  const playing = !still && !userPaused && !hovering && !tabHidden && lbPhoto === null;
+  const playing = !still && !userPaused && !hovering && !focusInside && !tabHidden && lbPhoto === null;
 
   useEffect(() => {
     if (!playing) return;
@@ -359,6 +372,8 @@ export default function MemoriesPage() {
 
   // ── Lightbox ──
   const [navDir, setNavDir] = useState(0);
+  // arrow keys step instantly; clicks and swipes keep the slide
+  const [navInstant, setNavInstant] = useState(false);
   const originRef = useRef<{ photo: number; rect: DOMRect } | null>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
@@ -369,6 +384,7 @@ export default function MemoriesPage() {
     originRef.current = { photo: p, rect };
     returnFocusRef.current = el;
     setNavDir(0);
+    setNavInstant(false);
     setLbPhoto(p);
     achievementCtx?.unlock('photographer');
   }, [achievementCtx]);
@@ -378,8 +394,9 @@ export default function MemoriesPage() {
     requestAnimationFrame(() => returnFocusRef.current?.focus());
   }, []);
 
-  const navLb = useCallback((dir: 1 | -1) => {
+  const navLb = useCallback((dir: 1 | -1, instant = false) => {
     setNavDir(dir);
+    setNavInstant(instant);
     setLbPhoto(cur => (cur === null ? cur : MASTER[(MASTER.indexOf(cur) + dir + TOTAL) % TOTAL]));
   }, []);
 
@@ -399,8 +416,8 @@ export default function MemoriesPage() {
         return;
       }
       if (e.key === 'Escape') closeLb();
-      else if (e.key === 'ArrowRight') navLb(1);
-      else if (e.key === 'ArrowLeft') navLb(-1);
+      else if (e.key === 'ArrowRight') navLb(1, true);
+      else if (e.key === 'ArrowLeft') navLb(-1, true);
       else if (e.key === 'Tab' && dialogRef.current) {
         // keep focus inside the dialog
         const buttons = [...dialogRef.current.querySelectorAll<HTMLElement>('button')];
@@ -441,14 +458,14 @@ export default function MemoriesPage() {
             <button
               onClick={() => setUserPaused(p => !p)}
               aria-pressed={userPaused}
-              className="flex items-center gap-1.5 px-3 py-1.5 pointer-coarse:py-3 rounded-full hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+              className="relative flex items-center gap-1.5 px-3 py-1.5 pointer-coarse:py-3 rounded-full hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-[color,background-color,scale] duration-150 ease-out active:scale-[0.97] after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-['']"
             >
               {userPaused ? <Play size={12} /> : <Pause size={12} />}
               {userPaused ? 'play' : 'pause'}
             </button>
             <button
               onClick={() => swap(Math.max(3, Math.floor(photos.length * 0.3)))}
-              className="flex items-center gap-1.5 px-3 py-1.5 pointer-coarse:py-3 rounded-full hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+              className="relative flex items-center gap-1.5 px-3 py-1.5 pointer-coarse:py-3 rounded-full hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-[color,background-color,scale] duration-150 ease-out active:scale-[0.97] after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-['']"
             >
               <Shuffle size={12} /> shuffle
             </button>
@@ -465,6 +482,8 @@ export default function MemoriesPage() {
           // mouse only: a tap fires emulated mouse events and would leave autoplay paused
           onPointerEnter={e => e.pointerType === 'mouse' && setHovering(true)}
           onPointerLeave={e => e.pointerType === 'mouse' && setHovering(false)}
+          onFocus={() => setFocusInside(true)}
+          onBlur={e => !e.currentTarget.contains(e.relatedTarget as Node | null) && setFocusInside(false)}
         >
           <div ref={containerRef} className="relative w-full h-full">
             {packed.map((item, slot) => (
@@ -527,7 +546,7 @@ export default function MemoriesPage() {
               <ChevronRight size={24} strokeWidth={1.5} />
             </button>
 
-            <AnimatePresence mode="popLayout" initial={true} custom={navDir}>
+            <AnimatePresence mode="popLayout" initial={true} custom={{ d: navDir, instant: navInstant }}>
               <motion.img
                 key={lbPhoto}
                 src={src(lbPhoto)}
@@ -539,11 +558,14 @@ export default function MemoriesPage() {
                 height={1000}
                 style={{ backgroundImage: `url(${thumb(lbPhoto)})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
                 onClick={e => e.stopPropagation()}
-                custom={navDir}
-                initial={zoomFrom(lbPhoto)}
+                custom={{ d: navDir, instant: navInstant }}
+                initial={navInstant ? false : zoomFrom(lbPhoto)}
                 animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
                 // a variant, so the leaving photo gets the latest direction via AnimatePresence's custom
-                variants={{ exit: (d: number) => ({ opacity: 0, x: d * -60, transition: { duration: 0.2 } }) }}
+                variants={{
+                  exit: ({ d, instant }: { d: number; instant: boolean }) =>
+                    instant ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, x: d * -60, transition: { duration: 0.2 } },
+                }}
                 exit="exit"
                 transition={{ type: 'spring', stiffness: 260, damping: 30 }}
                 className="relative z-10 max-w-[90vw] sm:max-w-[calc(100vw-9rem)] max-h-[calc(100dvh-8rem)] short:max-h-[calc(100dvh-4.5rem)] object-contain rounded-lg select-none shadow-2xl"

@@ -8,11 +8,16 @@ import { useEffect } from 'react';
 let locks = 0;
 let savedY = 0;
 
+export const isScrollLocked = () => document.documentElement.hasAttribute('data-scroll-locked');
+
 export function useBodyScrollLock(active: boolean) {
   useEffect(() => {
     if (!active) return;
     if (locks++ === 0) {
       savedY = window.scrollY;
+      // pinning the body drops scrollY to 0 and fires a scroll event; listeners that
+      // read scroll position (nav, reading progress, the city) skip it while this is set
+      document.documentElement.setAttribute('data-scroll-locked', '');
       const s = document.body.style;
       s.position = 'fixed';
       s.top = `-${savedY}px`;
@@ -30,6 +35,7 @@ export function useBodyScrollLock(active: boolean) {
       s.overflow = '';
       // instant: html has smooth scrolling, which would visibly scroll back from the top
       window.scrollTo({ top: savedY, behavior: 'instant' });
+      document.documentElement.removeAttribute('data-scroll-locked');
     };
   }, [active]);
 }

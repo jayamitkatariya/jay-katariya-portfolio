@@ -6,6 +6,7 @@ import type { Project } from '../../data/projects';
 import CategoryFilter, { type Category } from './CategoryFilter';
 
 const EASE = [0.23, 1, 0.32, 1] as const;
+const EASE_EXIT = [0.4, 0, 0.6, 1] as const;
 const EMAIL = 'hi@jaykatariya.com';
 
 const slug = (name: string) =>
@@ -88,7 +89,7 @@ export default function ProjectList({ projects, activeCategory, onChange, counts
               <motion.div
                 key={project.name}
                 id={id}
-                layout
+                layout="position"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
@@ -132,8 +133,8 @@ export default function ProjectList({ projects, activeCategory, onChange, counts
                       key="panel"
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.35, ease: EASE }}
+                      exit={{ height: 0, opacity: 0, transition: { duration: 0.16, ease: EASE_EXIT } }}
+                      transition={{ duration: 0.22, ease: EASE }}
                       className="overflow-hidden"
                     >
                       <div className="mb-1 grid gap-5 rounded-b-xl bg-[var(--bg-secondary)]/55 px-3 py-5 sm:grid-cols-12 sm:px-5 sm:py-6">
@@ -219,8 +220,8 @@ export default function ProjectList({ projects, activeCategory, onChange, counts
                                 key="preview"
                                 initial={reduceMotion ? false : { height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
-                                exit={reduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
-                                transition={reduceMotion ? { duration: 0 } : { duration: 0.42, ease: EASE }}
+                                exit={reduceMotion ? { opacity: 0 } : { height: 0, opacity: 0, transition: { duration: 0.18, ease: EASE_EXIT } }}
+                                transition={reduceMotion ? { duration: 0 } : { duration: 0.28, ease: EASE }}
                                 className="m-0 overflow-hidden"
                               >
                                 <div className="pt-1">

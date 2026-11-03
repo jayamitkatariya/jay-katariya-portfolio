@@ -10,7 +10,8 @@ export default function ReadingProgress() {
     const apply = () => {
       frame = 0;
       const bar = barRef.current;
-      if (!bar) return;
+      // an open overlay pins the body (scroll lock), which reads as scrollY 0: keep the bar where it was
+      if (!bar || document.documentElement.hasAttribute('data-scroll-locked')) return;
       const total = document.documentElement.scrollHeight - window.innerHeight;
       const p = total > 0 ? Math.min(Math.max(window.scrollY / total, 0), 1) : 0;
       bar.style.transform = `scaleX(${p})`;
@@ -37,7 +38,7 @@ export default function ReadingProgress() {
     <div className="fixed top-0 left-0 w-full h-[2px] z-[60] pointer-events-none">
       <div
         ref={barRef}
-        className="h-full w-full origin-left bg-[var(--text-primary)] opacity-0 transition-transform duration-150 ease-out"
+        className="h-full w-full origin-left bg-[var(--text-primary)] opacity-0"
         style={{ transform: 'scaleX(0)' }}
       />
     </div>

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { Canvas, extend, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { Environment, Lightformer } from '@react-three/drei';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -156,7 +156,7 @@ function roundedRect(w: number, h: number, r: number) {
 }
 
 function useCardGeometry() {
-  return useMemo(() => {
+  const geo = useMemo(() => {
     const shape = roundedRect(CARD.w, CARD.h, CARD.r);
     const face = new THREE.ShapeGeometry(shape, 16);
     // ShapeGeometry's UVs are raw positions; remap to 0..1 over the card so the artwork fills it
@@ -173,10 +173,12 @@ function useCardGeometry() {
     const crimp = new RoundedBoxGeometry(CRIMP.w, CRIMP.h, CRIMP.d, 3, 0.02);
     return { face, back, edge, clamp, crimp };
   }, []);
+  useEffect(() => () => Object.values(geo).forEach(g => g.dispose()), [geo]);
+  return geo;
 }
 
 function useShadowTexture() {
-  return useMemo(() => {
+  const tex = useMemo(() => {
     const c = document.createElement('canvas');
     c.width = 256;
     c.height = 320;
@@ -192,9 +194,10 @@ function useShadowTexture() {
     g.beginPath();
     g.roundRect(56 - 1000, 60, 144, 200, 12);
     g.fill();
-    const t = new THREE.CanvasTexture(c);
-    return t;
+    return new THREE.CanvasTexture(c);
   }, []);
+  useEffect(() => () => tex.dispose(), [tex]);
+  return tex;
 }
 
 interface BadgeProps {
@@ -250,6 +253,7 @@ function Badge({ textures, entrance, running, onReady, onSettle, onGrab }: Badge
     holo.center.set(0.5, 0.5);
     return { front: make(textures.front), back: make(textures.back), strap, holo, sealInk: make(drawSealInk(512)) };
   }, [textures]);
+  useEffect(() => () => Object.values(tex).forEach(t => t.dispose()), [tex]);
 
   // a fresh wake (pointer back over the stage, scrolled back into view) re-arms the rest detector
   useEffect(() => {
@@ -454,6 +458,19 @@ export default function IdBadge3D({
   const running = active && awake;
   const wrap = useRef<HTMLDivElement>(null);
   const holding = useRef(false);
+  const lostRef = useRef(onLost);
+  lostRef.current = onLost;
+  const glCanvas = useRef<HTMLCanvasElement | null>(null);
+  // only a real context loss (GPU reset, eviction) falls back to the static card; R3F forces a
+  // context loss itself on unmount, so the listener comes off before that can fire
+  const handleLost = useMemo(() => () => lostRef.current(), []);
+  useLayoutEffect(
+    () => () => {
+      glCanvas.current?.removeEventListener('webglcontextlost', handleLost);
+      glCanvas.current = null;
+    },
+    [handleLost],
+  );
 
   // The stage lets the page scroll vertically on touch (pan-y), except when a touch lands on
   // the card: R3F's pointerdown runs first and flags it, then we cancel the touch's scroll.
@@ -491,7 +508,10 @@ export default function IdBadge3D({
         flat // no tone mapping: the printed card keeps its true ink/paper values
         gl={{ alpha: true, antialias: !LOW_POWER }}
         frameloop={running ? 'always' : 'demand'}
-        onCreated={({ gl }) => gl.domElement.addEventListener('webglcontextlost', onLost, { once: true })}
+        onCreated={({ gl }) => {
+          glCanvas.current = gl.domElement;
+          gl.domElement.addEventListener('webglcontextlost', handleLost, { once: true });
+        }}
       >
         {/* calibrated so the paper renders at its printed tone; the env adds sheen, not exposure */}
         <ambientLight intensity={Math.PI * 0.5} />

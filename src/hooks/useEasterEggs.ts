@@ -8,7 +8,8 @@ export function useAwayTitle(awayTitle: string) {
       if (document.hidden) {
         original = document.title;
         document.title = awayTitle;
-      } else {
+      } else if (document.title === awayTitle) {
+        // only undo our own swap: a page that set its title while hidden keeps it
         document.title = original;
       }
     };

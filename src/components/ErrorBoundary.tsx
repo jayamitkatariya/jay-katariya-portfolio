@@ -36,11 +36,11 @@ export default class ErrorBoundary extends Component<Props, State> {
     if (this.state.error == null) return this.props.children;
     if (this.props.fallback !== undefined) return this.props.fallback;
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4 pt-24 gap-4">
+      <div role="alert" className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4 pt-24 gap-4">
         <p className="font-mono text-xs tracking-widest text-[var(--text-tertiary)]">something broke</p>
         <button
           onClick={() => window.location.reload()}
-          className="font-mono text-xs tracking-widest border border-[var(--border-primary)] rounded-full px-5 py-2.5 hover:border-[var(--text-primary)] transition-colors"
+          className="font-mono text-xs tracking-widest border border-[var(--border-primary)] rounded-full px-5 py-2.5 hover:border-[var(--text-primary)] transition-[color,background-color,border-color,scale] duration-150 ease-out active:scale-[0.97]"
         >
           reload the page
         </button>

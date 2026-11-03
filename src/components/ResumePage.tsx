@@ -23,6 +23,8 @@ function jumpToSection(id: string) {
   const el = document.getElementById(id);
   if (!el) return;
   el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  // move focus with the view, so the next Tab continues from the section rather than the rail
+  el.focus({ preventScroll: true });
   window.history.replaceState(window.history.state, '', `#${id}`);
 }
 
@@ -30,7 +32,7 @@ function Section({ index, children }: { index: number; children: ReactNode }) {
   const s = SECTIONS[index];
   return (
     // below lg the sticky section rail sits under the nav, so anchor jumps need more clearance
-    <section id={s.id} className="pb-10 sm:pb-14 scroll-mt-32! lg:scroll-mt-[72px]!">
+    <section id={s.id} tabIndex={-1} className="outline-none pb-10 sm:pb-14 scroll-mt-32! lg:scroll-mt-[72px]!">
       <SectionHeading text={s.label} icon={s.icon} />
       <div className="flex flex-col border-t border-[var(--border-primary)]">{children}</div>
     </section>
@@ -132,7 +134,7 @@ export default function ResumePage() {
           <a
             href={RESUME_URL}
             download={RESUME_FILENAME}
-            className="inline-flex items-center gap-2 px-4 py-2.5 min-h-11 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)] font-mono text-[11px] sm:text-xs tracking-wider hover:opacity-85 transition-opacity"
+            className="inline-flex items-center gap-2 px-4 py-2.5 min-h-11 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)] font-mono text-[11px] sm:text-xs tracking-wider hover:opacity-85 transition-[opacity,scale] duration-150 ease-out active:scale-[0.97]"
           >
             <Download className="w-3.5 h-3.5" />
             download pdf
@@ -141,7 +143,7 @@ export default function ResumePage() {
             href={RESUME_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-11 rounded-full border border-[var(--border-primary)] font-mono text-[11px] sm:text-xs tracking-wider text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-tertiary)] transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-11 rounded-full border border-[var(--border-primary)] font-mono text-[11px] sm:text-xs tracking-wider text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-tertiary)] transition-[color,background-color,border-color,scale] duration-150 ease-out active:scale-[0.97]"
           >
             open
             <ArrowUpRight className="w-3.5 h-3.5" />
@@ -258,6 +260,7 @@ export default function ResumePage() {
                   <a
                     key={s.id}
                     href={`#${s.id}`}
+                    aria-current={isActive ? 'true' : undefined}
                     onClick={e => {
                       e.preventDefault();
                       jumpToSection(s.id);

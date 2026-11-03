@@ -47,7 +47,8 @@ export function useKeyboardShortcuts(actions: ShortcutActions, enabled = true) {
         actions.toggleHelp();
         actions.onShortcutUsed?.();
         break;
-      case 'a':
+      // shift+a, not a bare a: one stray keypress shouldn't swap the whole site out
+      case 'A':
         actions.toggleAgent?.();
         actions.onShortcutUsed?.();
         break;

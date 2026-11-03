@@ -25,10 +25,10 @@ export const writingNotes: WritingNote[] = [
     slug: 'a-city-you-can-click',
     title: 'a city you can click',
     date: 'nov 2026',
-    lede: 'the skyline is a 1-bit canvas: about 1,500 windows, a clock tower on lafayette time, and birds that stay.',
+    lede: 'the skyline is a 1-bit canvas: about 1,500 windows, a clock tower on lafayette time, and birds that ride the scroll.',
     body: [
       'nothing in the hero is an image. the skyline, the river, the moon and the birds are all drawn from cells, which is why the city stays crisp at any size and why it weighs almost nothing.',
-      'click the sky and a bird flies out, picks a free rooftop and lands. it stays there, looks around, occasionally hops. send enough and the oldest one leaves. the count lives in the bottom corner.',
+      'click the sky and a bird flies out, picks a free rooftop and lands. it stays there, looks around, occasionally hops. scroll down and the whole flock lifts off; scroll back to the top and they come home. send enough and the oldest one leaves. the count lives in the bottom corner on a laptop.',
       'the sun becomes a crescent moon when you switch themes. the clock tower runs on the same time zone as the clock in the corner. the whole thing pauses when you scroll away, or when your system asks for reduced motion.',
     ],
   },

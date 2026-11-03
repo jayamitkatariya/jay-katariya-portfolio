@@ -15,7 +15,9 @@ const REVEAL_MS = 320;
 type Phase = 'idle' | 'cover' | 'reveal';
 
 export default function PixelWipe() {
-  const { pathname } = useLocation();
+  const { pathname, state } = useLocation();
+  // keyboard navigation (1–5) is instant: no wipe
+  const instant = (state as { instant?: boolean } | null)?.instant === true;
   const prevPath = useRef(pathname);
   const [phase, setPhase] = useState<Phase>('idle');
   const [run, setRun] = useState(0);
@@ -29,7 +31,7 @@ export default function PixelWipe() {
       return;
     }
     prevPath.current = pathname;
-    if (prefersReducedMotion()) return;
+    if (instant || prefersReducedMotion()) return;
     setRun(r => r + 1);
     setPhase('cover');
     const t1 = setTimeout(() => setPhase('reveal'), COVER_MS + HOLD_MS);

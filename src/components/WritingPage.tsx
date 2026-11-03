@@ -101,7 +101,8 @@ export default function WritingPage() {
         navigate(`/writing/${nextSlug}`);
       }, 160),
       window.setTimeout(() => setTear('open'), 240),
-      window.setTimeout(() => setTear(null), 1260),
+      // 'open' at 240ms + the 500ms tear in index.css, with a frame of slack
+      window.setTimeout(() => setTear(null), 760),
     ];
   };
 
@@ -186,6 +187,11 @@ export default function WritingPage() {
                   onClick={(event) => {
                     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
                     event.preventDefault();
+                    // keyboard activation (Enter) has no click count: go straight there, no paper tear
+                    if (event.detail === 0) {
+                      navigate(`/writing/${note.slug}`, { state: { instant: true } });
+                      return;
+                    }
                     openArticle(note.slug);
                   }}
                   className="group grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-baseline gap-x-3 gap-y-1 border-b border-[var(--border-primary)] py-6 sm:grid-cols-[2rem_minmax(0,1fr)_auto] sm:py-8"

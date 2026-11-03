@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, createContext, useContext } from 'react';
+import { useState, useCallback, useEffect, createContext, useContext, useRef } from 'react';
 import { onAppReady } from '../lib/appReady';
 import type { SpriteName } from '../components/SectionHeading';
 
@@ -57,19 +57,21 @@ export interface AchievementState {
 
 export function useAchievements(): AchievementState {
   const [unlocked, setUnlocked] = useState<Set<AchievementId>>(loadUnlocked);
+  // the source of truth for unlock(): side effects stay out of the state updater, which React may run twice
+  const unlockedRef = useRef(unlocked);
   // queue, so two unlocks in the same tick each get their own toast
   const [toastQueue, setToastQueue] = useState<Achievement[]>([]);
 
   const unlock = useCallback((id: AchievementId) => {
-    setUnlocked(prev => {
-      if (prev.has(id)) return prev;
-      const next = new Set<AchievementId>(prev);
-      next.add(id);
-      saveUnlocked(next);
-      const achievement = ACHIEVEMENTS.find(a => a.id === id);
-      if (achievement) setToastQueue(q => (q.some(a => a.id === id) ? q : [...q, achievement]));
-      return next;
-    });
+    const prev = unlockedRef.current;
+    if (prev.has(id)) return;
+    const next = new Set<AchievementId>(prev);
+    next.add(id);
+    unlockedRef.current = next;
+    setUnlocked(next);
+    saveUnlocked(next);
+    const achievement = ACHIEVEMENTS.find(a => a.id === id);
+    if (achievement) setToastQueue(q => (q.some(a => a.id === id) ? q : [...q, achievement]));
   }, []);
 
   const dismissToast = useCallback(() => setToastQueue(q => q.slice(1)), []);
