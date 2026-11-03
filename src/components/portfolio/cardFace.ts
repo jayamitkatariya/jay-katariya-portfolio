@@ -63,11 +63,22 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   });
 }
 
+/** iOS keeps a discarded canvas's backing store until GC; shrinking it frees that now. */
+export function release(c: HTMLCanvasElement | null | undefined) {
+  if (!c) return;
+  c.width = 0;
+  c.height = 0;
+}
+
 function canvas(w: number, h: number) {
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
-  return [c, c.getContext('2d')!] as const;
+  const g = c.getContext('2d');
+  // iOS hands back null once its total canvas memory is spent; fail loudly so the
+  // caller's fallback (static badge / plain card) takes over instead of a TypeError later
+  if (!g) throw new Error('canvas unavailable');
+  return [c, g] as const;
 }
 
 // canvas letterSpacing is newer than the TS DOM lib in some setups; ignored where unsupported
@@ -226,7 +237,9 @@ export async function drawCardFront(projectCount: number): Promise<HTMLCanvasEle
   g.roundRect(PHOTO.x, PHOTO.y, PHOTO.w, PHOTO.h, PHOTO.r);
   g.clip();
   if (photo) {
-    g.drawImage(photoDuotone(photo, PHOTO.w, PHOTO.h), PHOTO.x, PHOTO.y);
+    const duo = photoDuotone(photo, PHOTO.w, PHOTO.h);
+    g.drawImage(duo, PHOTO.x, PHOTO.y);
+    release(duo);
   } else {
     g.fillStyle = '#e8e5de';
     g.fillRect(PHOTO.x, PHOTO.y, PHOTO.w, PHOTO.h);
@@ -286,8 +299,10 @@ export async function drawCardFront(projectCount: number): Promise<HTMLCanvasEle
   g.beginPath();
   g.arc(SEAL.x, SEAL.y, SEAL.r, 0, Math.PI * 2);
   g.clip();
-  g.drawImage(drawHolo(), SEAL.x - SEAL.r, SEAL.y - SEAL.r, SEAL.r * 2, SEAL.r * 2);
-  g.drawImage(drawSealInk(), SEAL.x - SEAL.r, SEAL.y - SEAL.r, SEAL.r * 2, SEAL.r * 2);
+  for (const layer of [drawHolo(), drawSealInk()]) {
+    g.drawImage(layer, SEAL.x - SEAL.r, SEAL.y - SEAL.r, SEAL.r * 2, SEAL.r * 2);
+    release(layer);
+  }
   g.restore();
 
   // name, fitted to the measure

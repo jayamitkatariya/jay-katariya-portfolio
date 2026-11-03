@@ -28,6 +28,7 @@ import MobileMenu, { PAGES } from './components/MobileMenu';
 import WritingPage from './components/WritingPage';
 import { useBodyScrollLock, isScrollLocked } from './hooks/useBodyScrollLock';
 import { lazyWithRetry } from './lib/lazyWithRetry';
+import { safeDecode } from './lib/safeDecode';
 
 // Route-level + heavy components load on demand to keep the first paint light.
 // Writing deliberately stays in the main bundle: it's tiny, it's a primary nav
@@ -114,7 +115,7 @@ export default function App() {
       window.scrollTo({ top: 0, behavior: 'instant' });
       return;
     }
-    const id = decodeURIComponent(hash.slice(1));
+    const id = safeDecode(hash.slice(1));
     let tries = 0;
     const tick = () => {
       const el = document.getElementById(id);

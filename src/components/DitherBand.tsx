@@ -43,9 +43,11 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
     const buf = document.createElement('canvas');
-    const bctx = buf.getContext('2d')!;
+    const bctx = buf.getContext('2d');
+    // null when iOS's canvas memory is spent: skip the band rather than throw from the effect
+    if (!ctx || !bctx) return;
     const reduced = prefersReducedMotion();
     let cancelled = false;
     let raf = 0;
@@ -224,6 +226,7 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
       document.removeEventListener('visibilitychange', onVisibility);
       io.disconnect();
       ro.disconnect();
+      buf.width = buf.height = 0;
     };
   }, [src, color, pixel, focusY, text]);
 

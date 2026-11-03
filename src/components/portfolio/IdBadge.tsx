@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { projects } from '../../data/projects';
-import { drawCardBack, drawCardFront, drawStrap } from './cardFace';
+import { drawCardBack, drawCardFront, drawStrap, release } from './cardFace';
 import { ANCHOR_X, ANCHOR_Y, ATTACH_X, CAMERA, CARD, CLAMP, CLIP_Y, CRIMP, RING, VIEW_H, restCardY } from './badgeRig';
 import { prefersReducedMotion } from '../../lib/dither';
 import { onAppReady } from '../../lib/appReady';
@@ -158,11 +158,13 @@ export default function IdBadge({ className = '' }: { className?: string }) {
   useEffect(() => {
     let cancelled = false;
     let objectUrl = '';
+    let drawn: HTMLCanvasElement[] = [];
     (async () => {
       try {
         const [front, back] = await Promise.all([drawCardFront(projects.length), drawCardBack()]);
         const strap = drawStrap();
-        if (cancelled) return;
+        drawn = [front, back, strap];
+        if (cancelled) return drawn.forEach(release);
         setTextures({ front, back, strap });
         // async encode: a sync toDataURL of the 1024×1440 face blocked the main thread
         // for 100ms+ on phones, right in the middle of the page's entrance
@@ -178,6 +180,8 @@ export default function IdBadge({ className = '' }: { className?: string }) {
     return () => {
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
+      // ~12MB of card artwork; iOS only reclaims canvas memory on GC otherwise
+      drawn.forEach(release);
     };
   }, []);
 

@@ -1066,7 +1066,8 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
 
     const frame = (now: number) => {
       if (!running) return;
-      const dt = Math.min(0.05, (now - last) / 1000);
+      // the first rAF timestamp can predate start()'s performance.now(); never step backwards
+      const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
       last = now;
       step(dt);
       draw();
@@ -1190,6 +1191,7 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
     const onClick = (e: MouseEvent) => {
       if (!scene) return;
       const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
       const x = ((e.clientX - rect.left) / rect.width) * scene.cols;
       const y = ((e.clientY - rect.top) / rect.height) * scene.rows;
       spawn(x, y, true);
@@ -1295,6 +1297,9 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       sendRef.current = () => {};
       beginSkyRef.current = () => {};
       syncScrollRef.current = () => {};
+      // release the backing store (iOS caps total canvas memory; home → elsewhere → home stacked it)
+      canvas.width = 0;
+      canvas.height = 0;
     };
   }, []);
 

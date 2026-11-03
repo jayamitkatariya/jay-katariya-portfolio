@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowUpRight, Plus } from 'lucide-react';
 import type { Project } from '../../data/projects';
 import CategoryFilter, { type Category } from './CategoryFilter';
+import { safeDecode } from '../../lib/safeDecode';
 
 const EASE = [0.23, 1, 0.32, 1] as const;
 const EASE_EXIT = [0.4, 0, 0.6, 1] as const;
@@ -46,7 +47,7 @@ export default function ProjectList({ projects, activeCategory, onChange, counts
 
   // links like /portfolio#workro-recruit land with that project already open
   useEffect(() => {
-    const id = decodeURIComponent(hash.replace(/^#/, ''));
+    const id = safeDecode(hash.replace(/^#/, ''));
     if (id && projects.some((p) => slug(p.name) === id)) setOpen(id);
   }, [hash, projects]);
 

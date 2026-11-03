@@ -37,7 +37,17 @@ export default function DitheredPhoto({ src, className = '', pixel = 1.6, focusY
       if (!img || cancelled) return;
       canvas.width = w;
       canvas.height = h;
-      paintMask(canvas.getContext('2d')!, atkinson(sampleLuma(img, w, h, focusY, 1.45), w, h), w, h, INK, PAPER);
+      const ctx = canvas.getContext('2d');
+      // no context (iOS canvas memory cap): the colour photo underneath just shows as is
+      if (!ctx) {
+        onReadyRef.current?.();
+        return;
+      }
+      try {
+        paintMask(ctx, atkinson(sampleLuma(img, w, h, focusY, 1.45), w, h), w, h, INK, PAPER);
+      } catch {
+        // same: fall through to the plain photo
+      }
       onReadyRef.current?.();
     };
 
@@ -69,6 +79,8 @@ export default function DitheredPhoto({ src, className = '', pixel = 1.6, focusY
       clearTimeout(t);
       io?.disconnect();
       ro?.disconnect();
+      // many prints mount and unmount on memories/home; free each backing store right away
+      canvas.width = canvas.height = 0;
     };
   }, [src, pixel, focusY]);
 

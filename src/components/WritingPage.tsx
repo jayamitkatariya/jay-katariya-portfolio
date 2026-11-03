@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import PageHeader from './PageHeader';
 import { writingNotes } from '../data/writing';
 import { prefersReducedMotion } from '../lib/dither';
+import { safeDecode } from '../lib/safeDecode';
 
 // The index is only titles. Opening one tears the paper from the seam, away
 // from the middle, revealing the article underneath.
@@ -40,7 +41,7 @@ export default function WritingPage() {
   // only a /writing/… url names a note; while this page is exiting after a nav the path
   // is already somewhere else, and must not be sliced into a bogus slug
   const slug = pathname.startsWith('/writing/')
-    ? decodeURIComponent(pathname.replace(/\/+$/, '').slice('/writing/'.length))
+    ? safeDecode(pathname.replace(/\/+$/, '').slice('/writing/'.length))
     : '';
   const article = slug ? writingNotes.find((note) => note.slug === slug) : undefined;
 

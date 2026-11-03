@@ -42,13 +42,17 @@ export function sampleLuma(img: HTMLImageElement, w: number, h: number, focusY =
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
-  const ctx = c.getContext('2d', { willReadFrequently: true })!;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  if (!ctx) throw new Error('canvas unavailable');
   const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
   const dw = img.naturalWidth * scale;
   const dh = img.naturalHeight * scale;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(img, (w - dw) / 2, (h - dh) * focusY, dw, dh);
   const data = ctx.getImageData(0, 0, w, h).data;
+  // free the scratch canvas now: iOS caps total canvas memory and only reclaims on GC
+  c.width = 0;
+  c.height = 0;
 
   const out = new Float32Array(w * h);
   let min = 1;

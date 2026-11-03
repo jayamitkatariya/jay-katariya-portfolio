@@ -115,6 +115,12 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
     }
 
     const { cols, order, thresholds, dpr } = cells;
+    // drop the full-screen cover's backing store before the page's own canvases need the memory
+    const done = () => {
+      canvas.width = 0;
+      canvas.height = 0;
+      safeToRemove?.();
+    };
     let next = 0;
     let raf = 0;
     let startTime: number | null = null;
@@ -134,10 +140,10 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
       const p = Math.min((now - startTime) / DISSOLVE_MS, 1);
       clearUpTo(easeInOut(p));
       if (p < 1) raf = requestAnimationFrame(tick);
-      else safeToRemove?.();
+      else done();
     };
     raf = requestAnimationFrame(tick);
-    const fallback = setTimeout(() => safeToRemove?.(), DISSOLVE_MS + 300);
+    const fallback = setTimeout(done, DISSOLVE_MS + 300);
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(fallback);
