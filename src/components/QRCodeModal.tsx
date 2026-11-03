@@ -16,7 +16,7 @@ const VCARD = [
   'N:Katariya;Jay;;;',
   'FN:Jay Katariya',
   'TEL;TYPE=CELL:+17655438168',
-  'EMAIL;TYPE=INTERNET:jkatariy@purdue.edu',
+  'EMAIL;TYPE=INTERNET:hi@jaykatariya.com',
   'URL:https://linkedin.com/in/jkatariya',
   'ORG:Purdue University',
   'TITLE:Integrated Business & Engineering',
@@ -64,10 +64,7 @@ export default function QRCodeModal({ isOpen, onClose }: QRCodeModalProps) {
             className="relative mx-4 max-h-[calc(100dvh-2rem)]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Glow */}
-            <div className="absolute -inset-[3px] bg-gradient-to-r from-[#4facfe] via-[#00f2fe] to-[#f093fb] blur-lg opacity-60 rounded-2xl animate-gradient-xy" />
-
-            <div className="relative bg-[var(--card-bg)] backdrop-blur-xl border border-[var(--border-primary)] rounded-2xl shadow-2xl px-6 pb-6 pt-12 sm:px-8 sm:pb-8 sm:pt-12 short:pt-10 short:pb-4 flex flex-col items-center gap-4 short:gap-2 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
+            <div className="relative bg-[var(--card-bg)] border border-[var(--border-primary)] rounded-2xl shadow-2xl px-6 pb-6 pt-12 sm:px-8 sm:pb-8 sm:pt-12 short:pt-10 short:pb-4 flex flex-col items-center gap-4 short:gap-2 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
               <button
                 ref={closeRef}
                 onClick={onClose}
@@ -91,7 +88,7 @@ export default function QRCodeModal({ isOpen, onClose }: QRCodeModalProps) {
                 {failed ? (
                   // no code to scan: hand over the details directly
                   <p className="font-mono text-xs tracking-widest text-[var(--text-secondary)] leading-relaxed">
-                    <a href="mailto:jkatariy@purdue.edu" className="hover:text-[var(--text-primary)]">jkatariy@purdue.edu</a>
+                    <a href="mailto:hi@jaykatariya.com" className="hover:text-[var(--text-primary)]">hi@jaykatariya.com</a>
                     <br />
                     <a href="tel:+17655438168" className="hover:text-[var(--text-primary)]">(765) 543-8168</a>
                   </p>
@@ -100,7 +97,7 @@ export default function QRCodeModal({ isOpen, onClose }: QRCodeModalProps) {
                     scan to save my contact
                   </p>
                 )}
-                <p className="font-mono text-[10px] text-[var(--text-muted)] mt-1">
+                <p className="font-mono text-[10px] text-[var(--text-tertiary)] mt-1">
                   jay katariya • purdue university
                 </p>
               </div>

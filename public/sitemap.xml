@@ -2,6 +2,9 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://www.jaykatariya.com/</loc><priority>1.0</priority></url>
   <url><loc>https://www.jaykatariya.com/portfolio</loc><priority>0.8</priority></url>
+  <url><loc>https://www.jaykatariya.com/writing</loc><priority>0.7</priority></url>
+  <url><loc>https://www.jaykatariya.com/writing/the-site-is-a-contact-sheet</loc><priority>0.6</priority></url>
+  <url><loc>https://www.jaykatariya.com/writing/a-city-you-can-click</loc><priority>0.6</priority></url>
   <url><loc>https://www.jaykatariya.com/memories</loc><priority>0.6</priority></url>
   <url><loc>https://www.jaykatariya.com/resume</loc><priority>0.8</priority></url>
 </urlset>

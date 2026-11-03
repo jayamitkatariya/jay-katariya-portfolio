@@ -137,7 +137,7 @@ export default function LifeCanvas({ isDark }: { isDark: boolean }) {
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = isDarkRef.current ? '#f5f5f5' : '#111111'; // --text-primary
+      ctx.fillStyle = isDarkRef.current ? '#f0eee9' : '#1b1a17'; // --text-primary
       let lit = 0;
       const size = CELL - 2;
       for (let i = 0; i < glow.length; i++) {

@@ -2,9 +2,10 @@
 // Emitted at build time as /llms.txt and /index.md, and copied from agent mode.
 import {
   SITE_URL, RESUME_UPDATED, summary, about, contact, pages,
-  education, experience, recognition, skills, places, type ResumeEntry,
+  education, experience, recognition, skills, resumeProjects, places, type ResumeEntry,
 } from '../data/profile';
 import { projects } from '../data/projects';
+import { writingNotes } from '../data/writing';
 
 const entry = (e: ResumeEntry) =>
   [`### ${e.org}`, `${e.role} · ${e.when}`, '', ...e.points.map(p => `- ${p}`)].join('\n');
@@ -40,6 +41,12 @@ export function buildAgentMarkdown(): string {
       `- ${p.url ? `[${p.name}](${p.url})` : p.name} (${p.type}): ${p.description}. tags: ${p.tags.join(', ')}`,
     ),
     '',
+    '## Writing',
+    '',
+    ...writingNotes.map(note =>
+      [`### [${note.title}](${SITE_URL}/writing/${note.slug})`, `${note.date}`, '', note.lede, '', ...note.body].join('\n'),
+    ),
+    '',
     '## Recognition',
     '',
     ...recognition.map(r => `- ${r.title} (${r.tag}): ${r.detail}`),
@@ -47,6 +54,7 @@ export function buildAgentMarkdown(): string {
     '## Skills',
     '',
     ...skills.map(s => `- ${s.label}: ${s.items.join(', ')}`),
+    `- projects: ${resumeProjects.join(', ')}`,
     '',
     '## Places',
     '',

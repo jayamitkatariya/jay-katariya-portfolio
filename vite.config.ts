@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig, type Plugin} from 'vite';
 import {buildAgentMarkdown} from './src/lib/agentMarkdown';
+import {writingNotes} from './src/data/writing';
 
 // The site as plain markdown for agents that don't run JS: /llms.txt, plus /index.md
 // for agents that try "append .md". Built from the same data the pages render.
@@ -34,10 +35,12 @@ function agentFiles(): Plugin {
 // canonical url instead of the home page's. The SPA takes over from there as usual.
 function routeHtml(): Plugin {
   const SITE = 'https://www.jaykatariya.com';
-  const pages = {
+  const pages: Record<string, string> = {
     portfolio: 'Portfolio | Jay Katariya',
+    writing: 'Writing | Jay Katariya',
     memories: 'Memories | Jay Katariya',
     resume: 'Resume | Jay Katariya',
+    ...Object.fromEntries(writingNotes.map(note => [`writing/${note.slug}`, `${note.title} | Jay Katariya`])),
   };
   return {
     name: 'route-html',

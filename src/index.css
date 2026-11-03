@@ -5,51 +5,72 @@
 /* short: landscape phones, where height is the scarce dimension */
 @custom-variant short (@media (max-height: 500px));
 
+/* Display face: the same bitmap cut used across jay's other projects (okidoki, brewed).
+   Inter is the body face, JetBrains Mono the meta voice. */
+@font-face {
+  font-family: "PP Neue Bit";
+  src: url("/fonts/PPNeueBit-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --font-sans: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
-  --animate-gradient-xy: gradient-xy 3s ease infinite;
+  --font-display: "PP Neue Bit", "Inter", sans-serif;
 }
 
-/* ── Color System ── */
+/* ── Color System ──
+   one accent (the dither ink) against tuned neutrals — no stock scale */
 :root {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9fafb;
-  --bg-tertiary: #f3f4f6;
-  --text-primary: #111111;
-  --text-secondary: #6b7280;
-  --text-tertiary: #9ca3af;
-  --text-muted: #d1d5db;
-  --border-primary: #e5e7eb;
-  --nav-bg: rgba(255, 255, 255, 0.8);
-  --card-bg: rgba(255, 255, 255, 0.85);
-  --scrollbar-track: #ffffff;
-  --scrollbar-thumb: #e5e5e5;
-  --scrollbar-thumb-hover: #d4d4d4;
-  --selection-bg: #000000;
-  --selection-text: #ffffff;
-  --dither-ink: #4f46e5;
-  --grid-line: rgba(0, 0, 0, 0.045);
+  --bg-primary: #faf9f6;
+  --bg-secondary: #f2f0ea;
+  --bg-tertiary: #eae7e0;
+  --text-primary: #1b1a17;
+  --text-secondary: #565349;
+  /* 5.05:1 on bg-primary and 4.66:1 on bg-secondary — the lightest grey that still
+     clears AA for the 8.5px mono labels it is used for */
+  --text-tertiary: #6f6b61;
+  /* decorative row numbers only, but 1.65:1 was invisible — 3.0:1 keeps them quiet
+     while still legible as ordering */
+  --text-muted: #97917f;
+  --border-primary: #e1ddd1;
+  --nav-bg: rgba(250, 249, 246, 0.8);
+  --card-bg: rgba(250, 249, 246, 0.85);
+  --scrollbar-track: #faf9f6;
+  --scrollbar-thumb: #ddd8cc;
+  --scrollbar-thumb-hover: #c9c4b7;
+  --selection-bg: #1b1a17;
+  --selection-text: #faf9f6;
+  --accent: #4a43c4;
+  --dither-ink: var(--accent);
+  --grid-line: rgba(27, 26, 23, 0.05);
+  --tear-paper: #f3efe5;
+  --tear-edge: rgba(0, 0, 0, 0.16);
 }
 
 html.dark {
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #141414;
-  --bg-tertiary: #1a1a1a;
-  --text-primary: #f5f5f5;
-  --text-secondary: #a3a3a3;
-  --text-tertiary: #737373;
-  --text-muted: #404040;
-  --border-primary: #262626;
-  --nav-bg: rgba(10, 10, 10, 0.8);
-  --card-bg: rgba(10, 10, 10, 0.6);
-  --scrollbar-track: #0a0a0a;
-  --scrollbar-thumb: #262626;
-  --scrollbar-thumb-hover: #404040;
-  --selection-bg: #ffffff;
-  --selection-text: #000000;
-  --dither-ink: #6366f1;
-  --grid-line: rgba(255, 255, 255, 0.035);
+  --bg-primary: #111112;
+  --bg-secondary: #1a1a1c;
+  --bg-tertiary: #222225;
+  --text-primary: #f0eee9;
+  --text-secondary: #a49f94;
+  --text-tertiary: #8f8a80;
+  --text-muted: #63605a;
+  --border-primary: #2c2c2f;
+  --nav-bg: rgba(17, 17, 18, 0.8);
+  --card-bg: rgba(17, 17, 18, 0.6);
+  --scrollbar-track: #111112;
+  --scrollbar-thumb: #2c2c2f;
+  --scrollbar-thumb-hover: #3c3b38;
+  --selection-bg: #f0eee9;
+  --selection-text: #111112;
+  --accent: #8b83f2;
+  --dither-ink: var(--accent);
+  --grid-line: rgba(240, 238, 233, 0.04);
+  --tear-paper: #1d1d23;
+  --tear-edge: rgba(255, 255, 255, 0.1);
 }
 
 /* ── View Transitions (Dark Mode) ── */
@@ -78,15 +99,36 @@ html.dark {
   }
 }
 
-@keyframes gradient-xy {
-  0%, 100% {
-    background-size: 400% 400%;
-    background-position: 0% 50%;
-  }
-  50% {
-    background-size: 200% 200%;
-    background-position: 100% 50%;
-  }
+/* ── Theme orb: the sun sets, the moon rises (and back) ── */
+.theme-orb {
+  position: relative;
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+.theme-orb > span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  will-change: transform, opacity;
+  transition: transform 0.7s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.45s ease;
+}
+.theme-orb__sun {
+  opacity: 1;
+  transform: translateY(0) rotate(0deg);
+}
+.theme-orb__moon {
+  opacity: 0;
+  transform: translateY(8px) rotate(-120deg);
+}
+.theme-orb[data-dark="true"] .theme-orb__sun {
+  opacity: 0;
+  transform: translateY(8px) rotate(120deg);
+}
+.theme-orb[data-dark="true"] .theme-orb__moon {
+  opacity: 1;
+  transform: translateY(0) rotate(0deg);
 }
 
 html {
@@ -179,78 +221,7 @@ section[id] {
   }
 }
 
-/* ── Marquee Animation ── */
-@keyframes marquee-left {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-@keyframes marquee-right {
-  0% { transform: translateX(-50%); }
-  100% { transform: translateX(0); }
-}
-
-.animate-marquee-left {
-  animation: marquee-left 30s linear infinite;
-}
-
-.animate-marquee-right {
-  animation: marquee-right 30s linear infinite;
-}
-
-/* soft edges so chips glide in/out instead of clipping */
-.marquee-fade {
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
-}
-
-.animate-marquee-left:hover,
-.animate-marquee-right:hover {
-  animation-play-state: paused;
-}
-
-/* ── Ambient Floating Orbs ── */
-@keyframes float-orb {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  25% {
-    transform: translate(30px, -40px) scale(1.05);
-  }
-  50% {
-    transform: translate(-20px, -60px) scale(0.95);
-  }
-  75% {
-    transform: translate(40px, -20px) scale(1.02);
-  }
-}
-
-.animate-float-orb {
-  animation: float-orb 20s ease-in-out infinite;
-}
-
-.animate-float-orb-slow {
-  animation: float-orb 28s ease-in-out infinite reverse;
-}
-
-.animate-float-orb-delayed {
-  animation: float-orb 24s ease-in-out infinite;
-  animation-delay: -8s;
-}
-
-/* ── Noise Texture Overlay ── */
-.noise-overlay::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
-}
-
+/* ── Small state-change reveal (expanding a disclosure) ── */
 @keyframes fade-up {
   /* no `to`: ends at the element's own opacity/transform */
   from { opacity: 0; transform: translateY(6px); }
@@ -402,6 +373,55 @@ section[id] {
   }
 }
 
+/* ── Writing: the paper tear ──
+   Two clipped halves of the page paper. On open they peel away from the jagged
+   seam, revealing the article underneath. */
+.paper-tear {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  pointer-events: none;
+}
+.paper-tear[data-phase="cover"] {
+  animation: paper-cover 150ms ease-out both;
+}
+.paper-tear__half {
+  position: absolute;
+  inset: 0;
+  background: var(--tear-paper);
+  filter: drop-shadow(0 0 1px var(--tear-edge)) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+  will-change: transform;
+  transition: transform 950ms cubic-bezier(0.7, 0, 0.3, 1);
+}
+.paper-tear[data-phase="open"] .paper-tear__top {
+  transform: translateY(-104%) rotate(-1.1deg);
+}
+.paper-tear[data-phase="open"] .paper-tear__bottom {
+  transform: translateY(104%) rotate(1.1deg);
+}
+@keyframes paper-cover {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Hero scroll cue ── */
+@keyframes scroll-cue {
+  0% { transform: translateY(-100%); opacity: 0; }
+  25% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { transform: translateY(320%); opacity: 0; }
+}
+.animate-scroll-cue {
+  animation: scroll-cue 1.9s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+
+/* ── Filmstrip: the strip is the scroll container, no native bar ── */
+.filmstrip {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.filmstrip::-webkit-scrollbar { display: none; }
+
 /* dark-mode spam easter egg */
 .disco-flicker {
   mix-blend-mode: difference;
@@ -427,9 +447,11 @@ section[id] {
 .agent-doc h1 { font-size: 1.5em; margin-bottom: 1rem; }
 .agent-doc h2 { font-size: 1.1em; margin: 2.5rem 0 0.75rem; }
 .agent-doc h3 { font-size: 1em; margin: 1.25rem 0 0.15rem; }
+.agent-doc h4 { font-size: 0.95em; margin: 1rem 0 0.15rem; font-weight: 500; color: var(--text-primary); }
 .agent-doc h1::before { content: '# '; color: var(--text-tertiary); }
 .agent-doc h2::before { content: '## '; color: var(--text-tertiary); }
 .agent-doc h3::before { content: '### '; color: var(--text-tertiary); }
+.agent-doc h4::before { content: '#### '; color: var(--text-tertiary); }
 .agent-doc blockquote::before { content: '> '; color: var(--text-tertiary); }
 .agent-doc main p + p { margin-top: 0.75rem; }
 .agent-doc main ul { margin-top: 0.4rem; }

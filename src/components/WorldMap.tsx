@@ -14,18 +14,18 @@ interface MapLocation {
 }
 
 const LOCATIONS: MapLocation[] = [
-  { name: 'pune', context: 'hometown', lat: 18.52, lng: 73.86, color: '#f59e0b', category: 'live', region: 'home' },
-  { name: 'west lafayette', context: 'purdue university', lat: 40.43, lng: -86.91, color: '#818cf8', category: 'study', region: 'us' },
-  { name: 'mauritius', context: 'traveled', lat: -20.35, lng: 57.55, color: '#22d3ee', category: 'visited', region: 'mauritius' },
-  { name: 'singapore', context: 'traveled', lat: 1.35, lng: 103.82, color: '#22d3ee', category: 'visited', region: 'singapore' },
-  { name: 'switzerland', context: 'traveled', lat: 46.82, lng: 8.23, color: '#22d3ee', category: 'visited', region: 'europe' },
-  { name: 'spain', context: 'traveled', lat: 40.46, lng: -3.75, color: '#22d3ee', category: 'visited', region: 'europe' },
-  { name: 'los angeles', context: 'traveled', lat: 34.05, lng: -118.24, color: '#22d3ee', category: 'visited', region: 'us' },
-  { name: 'san diego', context: 'traveled', lat: 32.72, lng: -117.16, color: '#22d3ee', category: 'visited', region: 'us' },
-  { name: 'gettysburg', context: 'lincoln leadership institute', lat: 39.83, lng: -77.23, color: '#22d3ee', category: 'visited', region: 'us' },
-  { name: 'chicago', context: 'traveled', lat: 41.88, lng: -87.63, color: '#22d3ee', category: 'visited', region: 'us' },
-  { name: 'indianapolis', context: 'traveled', lat: 39.77, lng: -86.16, color: '#22d3ee', category: 'visited', region: 'us' },
-  { name: 'cincinnati', context: 'traveled', lat: 39.1, lng: -84.51, color: '#22d3ee', category: 'visited', region: 'us' },
+  { name: 'pune', context: 'hometown', lat: 18.52, lng: 73.86, color: 'var(--accent)', category: 'live', region: 'home' },
+  { name: 'west lafayette', context: 'purdue university', lat: 40.43, lng: -86.91, color: 'var(--accent)', category: 'study', region: 'us' },
+  { name: 'mauritius', context: 'traveled', lat: -20.35, lng: 57.55, color: 'var(--accent)', category: 'visited', region: 'mauritius' },
+  { name: 'singapore', context: 'traveled', lat: 1.35, lng: 103.82, color: 'var(--accent)', category: 'visited', region: 'singapore' },
+  { name: 'switzerland', context: 'traveled', lat: 46.82, lng: 8.23, color: 'var(--accent)', category: 'visited', region: 'europe' },
+  { name: 'spain', context: 'traveled', lat: 40.46, lng: -3.75, color: 'var(--accent)', category: 'visited', region: 'europe' },
+  { name: 'los angeles', context: 'traveled', lat: 34.05, lng: -118.24, color: 'var(--accent)', category: 'visited', region: 'us' },
+  { name: 'san diego', context: 'traveled', lat: 32.72, lng: -117.16, color: 'var(--accent)', category: 'visited', region: 'us' },
+  { name: 'gettysburg', context: 'lincoln leadership institute', lat: 39.83, lng: -77.23, color: 'var(--accent)', category: 'visited', region: 'us' },
+  { name: 'chicago', context: 'traveled', lat: 41.88, lng: -87.63, color: 'var(--accent)', category: 'visited', region: 'us' },
+  { name: 'indianapolis', context: 'traveled', lat: 39.77, lng: -86.16, color: 'var(--accent)', category: 'visited', region: 'us' },
+  { name: 'cincinnati', context: 'traveled', lat: 39.1, lng: -84.51, color: 'var(--accent)', category: 'visited', region: 'us' },
 ];
 
 function toXY(lat: number, lng: number): [number, number] {
@@ -68,9 +68,9 @@ function landPath(): string {
 }
 
 const CATEGORY_META: Record<string, { label: string; icon: string; color: string }> = {
-  live: { label: 'living', icon: '◆', color: '#f59e0b' },
-  study: { label: 'studying', icon: '▲', color: '#818cf8' },
-  visited: { label: 'visited', icon: '●', color: '#22d3ee' },
+  live: { label: 'living', icon: '◆', color: 'var(--accent)' },
+  study: { label: 'studying', icon: '▲', color: 'var(--accent)' },
+  visited: { label: 'visited', icon: '●', color: 'var(--accent)' },
 };
 
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
@@ -79,9 +79,6 @@ const MONO = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
 const MAP_CSS = `
 .wm-pin{transform:scale(0);transform-box:fill-box;transform-origin:center;transition:transform .55s cubic-bezier(.34,1.56,.64,1) var(--d,0s)}
 .wm-on .wm-pin{transform:scale(1)}
-.wm-pulse{opacity:0;transform-box:fill-box;transform-origin:center}
-.wm-on .wm-pulse{animation:wm-pulse 2.8s cubic-bezier(0,0,.2,1) var(--d,0s) infinite}
-@keyframes wm-pulse{0%{transform:scale(1);opacity:.55}100%{transform:scale(4.5);opacity:0}}
 .wm-label{opacity:0;transition:opacity .6s ease var(--d,0s),fill .2s,font-size .2s}
 .wm-on .wm-label{opacity:1}
 .wm-land{opacity:0;transition:opacity 1s ease}
@@ -121,15 +118,15 @@ export default function WorldMap({ isDark }: { isDark?: boolean }) {
   const dark = isDark ?? false;
 
   const palette = useMemo(() => ({
-    ocean: dark ? '#08080f' : '#fafbfc',
-    oceanGradEnd: dark ? '#0c0c18' : '#f4f5f7',
-    landDot: dark ? 'rgba(255,255,255,0.14)' : 'rgba(15,23,42,0.17)',
-    text: dark ? '#8a8a96' : '#7a7a85',
-    textHover: dark ? '#f5f5f5' : '#111',
-    tooltipBg: dark ? 'rgba(15,15,25,0.92)' : 'rgba(255,255,255,0.95)',
+    ocean: dark ? '#111112' : '#faf9f6',
+    oceanGradEnd: dark ? '#151517' : '#f5f3ed',
+    landDot: dark ? 'rgba(240,238,233,0.14)' : 'rgba(27,26,23,0.17)',
+    text: dark ? '#8a857c' : '#7a766c',
+    textHover: dark ? '#f0eee9' : '#1b1a17',
+    tooltipBg: dark ? 'rgba(17,17,18,0.92)' : 'rgba(250,249,246,0.95)',
     tooltipBorder: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-    tooltipText: dark ? '#e5e5e5' : '#1a1a1a',
-    tooltipSub: dark ? '#777' : '#888',
+    tooltipText: dark ? '#f0eee9' : '#1b1a17',
+    tooltipSub: dark ? '#77726a' : '#8b877c',
   }), [dark]);
 
   const land = useMemo(landPath, []);
@@ -286,28 +283,15 @@ export default function WorldMap({ isDark }: { isDark?: boolean }) {
                 className="outline-none"
                 style={{ opacity: lit ? 1 : 0.3, transition: 'opacity 0.35s ease', '--d': delay } as CSSProperties}
               >
-                {/* Pulse ring: home and campus only, so the map isn't throbbing everywhere */}
-                {major && !still && (
-                  <circle
-                    className="wm-pulse"
-                    pointerEvents="none"
-                    cx={x} cy={y} r={baseR}
-                    fill="none"
-                    stroke={loc.color}
-                    strokeWidth={1}
-                    vectorEffect="non-scaling-stroke"
-                  />
-                )}
-
+                {/* Major pins (home, campus) are larger; visited pins stay small */}
                 <g className="wm-pin" pointerEvents="none">
-                  <circle cx={x} cy={y} r={baseR * 2.6} fill={loc.color} opacity={isHov ? 0.18 : major ? 0.08 : 0} style={{ transition: 'opacity 0.3s' }} />
+                  <circle cx={x} cy={y} r={baseR * 2.6} opacity={isHov ? 0.18 : major ? 0.08 : 0} style={{ fill: loc.color, transition: 'opacity 0.3s' }} />
 
                   <circle
                     cx={x} cy={y}
                     r={isHov ? baseR * 1.45 : baseR}
-                    fill={loc.color}
                     filter={isHov ? 'url(#glow-marker)' : undefined}
-                    style={{ transition: 'r 0.2s ease' }}
+                    style={{ fill: loc.color, transition: 'r 0.2s ease' }}
                   />
                   <circle
                     cx={x} cy={y}
@@ -374,7 +358,7 @@ export default function WorldMap({ isDark }: { isDark?: boolean }) {
                   fill={palette.tooltipText}
                   style={{ fontFamily: MONO, fontSize: `${9 * k}px`, fontWeight: 500, letterSpacing: '0.06em' }}
                 >
-                  <tspan fill={hoveredLoc.color}>{CATEGORY_META[hoveredLoc.category].icon}</tspan> {hoveredLoc.name}
+                  <tspan style={{ fill: hoveredLoc.color }}>{CATEGORY_META[hoveredLoc.category].icon}</tspan> {hoveredLoc.name}
                 </text>
                 <text
                   x={tx + 10 * k}

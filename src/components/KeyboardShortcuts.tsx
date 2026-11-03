@@ -5,9 +5,12 @@ import { useDialogFocus } from '../hooks/useDialogFocus';
 const SHORTCUTS = [
   { key: '1', description: 'go to home' },
   { key: '2', description: 'go to portfolio' },
-  { key: '3', description: 'go to memories' },
-  { key: '4', description: 'go to resume' },
+  { key: '3', description: 'go to writing' },
+  { key: '4', description: 'go to memories' },
+  { key: '5', description: 'go to resume' },
   { key: '← →', description: 'browse photos (in a memory)' },
+  { key: 'a', description: 'agent mode' },
+  { key: 'x', description: 'achievements' },
   { key: '?', description: 'show shortcuts' },
   { key: 'esc', description: 'close overlays' },
 ];
@@ -39,7 +42,7 @@ export default function KeyboardShortcuts({ isOpen, onClose }: { isOpen: boolean
             transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[81] w-[90vw] max-w-sm"
           >
-            <div className="bg-[var(--card-bg)] backdrop-blur-xl border border-[var(--border-primary)] rounded-2xl shadow-2xl p-6 sm:p-8 max-h-[85dvh] overflow-y-auto overscroll-contain">
+            <div className="bg-[var(--card-bg)] border border-[var(--border-primary)] rounded-2xl shadow-2xl p-6 sm:p-8 max-h-[85dvh] overflow-y-auto overscroll-contain">
               <div className="flex items-center justify-between mb-5 -mt-2">
                 <h3 className="font-mono text-xs tracking-widest text-[var(--text-secondary)] uppercase">keyboard shortcuts</h3>
                 <button

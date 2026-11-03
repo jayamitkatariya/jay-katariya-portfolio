@@ -21,7 +21,7 @@ export function useDarkMode() {
     root.style.colorScheme = isDark ? 'dark' : 'only light';
     // keep the browser chrome in sync with the in-app toggle, not just the OS setting
     document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
-      m.setAttribute('content', isDark ? '#0a0a0a' : '#ffffff');
+      m.setAttribute('content', isDark ? '#111112' : '#faf9f6');
     });
     document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', isDark ? 'dark' : 'only light');
   }, [isDark]);

@@ -4,24 +4,26 @@ import { PixelIcon } from '../SectionHeading';
 
 interface GlowCardProps {
   project: Project;
-  /** tailwind bg class for the category's pixel marker */
-  dotClass: string;
   index: number;
 }
 
 // Project card in the site's monochrome pixel language: index number, category
 // pixel, and a pixel ▸ that steps in on hover. Color is confined to one pixel.
-export default function GlowCard({ project, dotClass, index }: GlowCardProps) {
-  const Wrapper = project.url ? 'a' : 'div';
-  const wrapperProps = project.url
+// Hover feedback is reserved for cards that actually link somewhere.
+export default function GlowCard({ project, index }: GlowCardProps) {
+  const interactive = Boolean(project.url);
+  const Wrapper = interactive ? 'a' : 'div';
+  const wrapperProps = interactive
     ? { href: project.url, target: '_blank' as const, rel: 'noopener noreferrer' }
     : {};
 
   return (
     <Wrapper
       {...wrapperProps}
-      className={`group relative flex flex-col h-full rounded-2xl border border-[var(--border-primary)] bg-[var(--card-bg)] p-5 sm:p-6 transition-[border-color,translate,scale,box-shadow] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-[var(--text-tertiary)] hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-16px_rgba(0,0,0,0.25)] active:scale-[0.99] active:border-[var(--text-tertiary)] ${
-        project.url ? 'cursor-pointer' : 'cursor-default'
+      className={`group relative flex flex-col h-full rounded-2xl border border-[var(--border-primary)] bg-[var(--card-bg)] p-5 sm:p-6 ${
+        interactive
+          ? 'cursor-pointer transition-colors duration-300 hover:border-[var(--text-tertiary)]'
+          : 'cursor-default'
       }`}
     >
       {/* Header: index + category + link */}
@@ -32,16 +34,13 @@ export default function GlowCard({ project, dotClass, index }: GlowCardProps) {
             name="arrow"
             size={12}
             instant
-            className="absolute left-0 top-1/2 -translate-y-1/2 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 [transition-timing-function:steps(3)]"
+            className="absolute left-0 top-1/2 -translate-y-1/2 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-[opacity,translate] duration-200 [transition-timing-function:steps(3)]"
           />
         </span>
-        <span className={`w-1.5 h-1.5 ${dotClass}`} aria-hidden="true" />
+        <span className="w-1.5 h-1.5 bg-[var(--accent)]" aria-hidden="true" />
         <span className="uppercase text-[var(--text-tertiary)]">{project.type}</span>
-        {project.url && (
-          <ArrowUpRight
-            size={14}
-            className="ml-auto text-[var(--text-muted)] group-hover:text-[var(--text-primary)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all duration-300"
-          />
+        {interactive && (
+          <ArrowUpRight size={14} className="ml-auto text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors duration-300" />
         )}
       </div>
 

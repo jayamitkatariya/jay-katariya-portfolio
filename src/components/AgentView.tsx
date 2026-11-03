@@ -5,6 +5,7 @@ import {
   education, experience, recognition, skills, places, type ResumeEntry,
 } from '../data/profile';
 import { projects } from '../data/projects';
+import { writingNotes } from '../data/writing';
 import { buildAgentMarkdown } from '../lib/agentMarkdown';
 
 interface AgentViewProps {
@@ -94,6 +95,22 @@ export default function AgentView({ onExit }: AgentViewProps) {
                 </li>
               ))}
             </ul>
+          </section>
+
+          <section aria-labelledby="agent-writing">
+            <h2 id="agent-writing">writing</h2>
+            {writingNotes.map(note => (
+              <article key={note.slug}>
+                <h3><a href={`/writing/${note.slug}`}>{note.title}</a></h3>
+                <p className="agent-meta">{note.date}</p>
+                <p>{note.lede}</p>
+                {note.body.map(paragraph =>
+                  paragraph.startsWith('## ')
+                    ? <h4 key={paragraph}>{paragraph.slice(3)}</h4>
+                    : <p key={paragraph}>{paragraph}</p>,
+                )}
+              </article>
+            ))}
           </section>
 
           <section aria-labelledby="agent-recognition">

@@ -388,7 +388,7 @@ export async function drawCardBack(): Promise<HTMLCanvasElement> {
   g.font = mono(28);
   g.fillText('if found, say hi', CARD_W / 2, 850);
   g.fillStyle = PAPER;
-  g.fillText('jkatariy@purdue.edu', CARD_W / 2, 896);
+  g.fillText('hi@jaykatariya.com', CARD_W / 2, 896);
 
   g.fillStyle = '#8a867c';
   g.font = mono(20);

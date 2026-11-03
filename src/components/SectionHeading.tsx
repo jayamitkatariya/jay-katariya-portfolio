@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import TextScramble from './TextScramble';
 
 // 8×8 pixel sprites, drawn in pixel-by-pixel when the heading scrolls into view
 const SPRITES = {
@@ -143,6 +142,46 @@ const SPRITES = {
     '########',
     '........',
   ],
+  moon: [
+    '...####.',
+    '..##....',
+    '.##.....',
+    '.##.....',
+    '.##.....',
+    '.##.....',
+    '..##....',
+    '...####.',
+  ],
+  sun: [
+    '...##...',
+    '.#....#.',
+    '..####..',
+    '.######.',
+    '.######.',
+    '..####..',
+    '.#....#.',
+    '...##...',
+  ],
+  disco: [
+    '..####..',
+    '.######.',
+    '##.##.##',
+    '.######.',
+    '##.##.##',
+    '.######.',
+    '...##...',
+    '...##...',
+  ],
+  robot: [
+    '........',
+    '.######.',
+    '.#.#..#.',
+    '.######.',
+    '.#....#.',
+    '.######.',
+    '.#.##.#.',
+    '.#.##.#.',
+  ],
 } as const;
 
 export type SpriteName = keyof typeof SPRITES;
@@ -216,21 +255,20 @@ export function PixelIcon({
 interface SectionHeadingProps {
   text: string;
   icon: SpriteName;
-  /** tailwind text color class, e.g. "text-blue-500" */
-  color: string;
   align?: 'left' | 'center';
   className?: string;
 }
 
-export default function SectionHeading({ text, icon, color, align = 'left', className = '' }: SectionHeadingProps) {
+// Display face, ink color; the pixel icon carries the one accent
+export default function SectionHeading({ text, icon, align = 'left', className = '' }: SectionHeadingProps) {
   return (
     <h2
-      className={`group/heading flex items-center gap-3 text-xl sm:text-2xl xl:text-3xl font-medium tracking-tight mb-4 sm:mb-5 md:mb-6 ${color} ${
+      className={`flex items-center gap-3 font-display font-bold tracking-normal text-xl sm:text-2xl xl:text-3xl mb-4 sm:mb-5 md:mb-6 ${
         align === 'center' ? 'justify-center' : ''
       } ${className}`}
     >
-      <PixelIcon name={icon} className="shrink-0 transition-transform duration-300 group-hover/heading:-rotate-12 group-hover/heading:scale-110" />
-      <TextScramble text={text} />
+      <PixelIcon name={icon} className="shrink-0 text-[var(--accent)]" />
+      {text}
     </h2>
   );
 }

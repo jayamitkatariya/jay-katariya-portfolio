@@ -5,26 +5,28 @@ export const SITE_URL = 'https://www.jaykatariya.com';
 export const RESUME_URL = '/jay-katariya-resume.pdf';
 export const RESUME_FILENAME = 'Jay_Katariya_Resume.pdf';
 // bump when the pdf in /public changes
-export const RESUME_UPDATED = 'may 2026';
+export const RESUME_UPDATED = 'nov 2026';
 
 export const summary =
-  'integrated business & engineering student (minor in psychology) at purdue university. cofounder and ceo of workro, founder of mindcord (130k+ members), goldman sachs possibilities summit alum.';
+  'integrated business & engineering student (minor in psychology) at purdue university. cofounder and ceo of workro (100+ companies, 50,000+ ai interviews), founder of mindcord (130,000+ members), goldman sachs possibilities summit alum.';
 
 export const about = [
   "hey, i'm currently studying integrated business and engineering at purdue because i like understanding things from first principles. i crave the feeling of creating something out of nothing.",
-  'i like to write code, build innovative platforms, do entrepreneurship, produce projects, and philosophize.',
+  'i like writing code, starting companies, shipping side projects, and philosophizing.',
 ];
 
 export const contact = [
-  { label: 'email', value: 'jkatariy@purdue.edu', href: 'mailto:jkatariy@purdue.edu' },
+  { label: 'email', value: 'hi@jaykatariya.com', href: 'mailto:hi@jaykatariya.com' },
   { label: 'linkedin', value: 'linkedin.com/in/jkatariya', href: 'https://linkedin.com/in/jkatariya' },
+  { label: 'github', value: 'github.com/jayamitkatariya', href: 'https://github.com/jayamitkatariya' },
   { label: 'resume', value: 'jay-katariya-resume.pdf', href: `${SITE_URL}${RESUME_URL}` },
   { label: 'website', value: 'jaykatariya.com', href: SITE_URL },
 ];
 
 export const pages = [
-  { path: '/', label: 'home', description: 'about, current work, recognition, skills, travel, contact' },
-  { path: '/portfolio', label: 'portfolio', description: 'startups, consulting, freelance and personal projects' },
+  { path: '/', label: 'home', description: 'the cover: intro, selected work, photos and contact' },
+  { path: '/portfolio', label: 'portfolio', description: 'startups, consulting and personal projects' },
+  { path: '/writing', label: 'writing', description: 'notes on building, design and the internet' },
   { path: '/memories', label: 'memories', description: 'photo gallery' },
   { path: '/resume', label: 'resume', description: 'the one-page resume, unfolded' },
 ];
@@ -43,49 +45,49 @@ export const education: ResumeEntry[] = [
     role: 'b.s. integrated business & engineering · minor in psychology',
     points: [
       "dean's list & semester honors",
-      'larsen leaders academy, top 10% of daniels · certificate in entrepreneurship & innovation',
-      'lincoln leadership institute study abroad, gettysburg, pa (fully sponsored)',
-      'ta for mgmt 100 · venturex · doster leadership conference · im soccer',
+      'larsen leaders academy, top 10% · certificate in entrepreneurship & innovation · doster leadership conference',
+      'venturex ($5,000 venturex2 grant) · lincoln leadership institute study abroad (fully sponsored) · ta, mgmt 100',
     ],
   },
 ];
 
 export const experience: ResumeEntry[] = [
   {
-    when: 'dec 2025 — now',
+    when: 'dec 2025 – now',
     org: 'workro',
     role: 'co-founder & ceo',
     points: [
-      'building an ai-native people platform for indian smbs, backed by infinity automated solutions. leading the dev and marketing teams.',
-      'workro desk and workro recruit are live with 100+ companies onboarded. recruit runs ai resume screening, proctored interviews and candidate pipelines.',
+      'co-founded an ai-native b2b saas company that gives indian smbs intelligent hiring and it operations tools. secured institutional backing from infinity automated solutions. leading the development and marketing teams.',
+      'launched workro recruit, an ai-powered recruitment ats with resume screening, proctored interviews and candidate pipelines, and workro desk, an it helpdesk and asset management platform. onboarded 100+ companies.',
+      'scaled recruit past 50,000 ai interviews. cut screening time 72%, from 500 applicants to a shortlist of 5 in about 30 minutes.',
     ],
   },
   {
-    when: 'sep 2024 — now',
+    when: 'sep 2024 – now',
     org: 'purduethink',
     role: 'project manager & consultant, senior advisory board · 6% acceptance',
     points: [
-      'leading a 5-person team advising united airlines on recruiting pipeline strategy and mileageplus loyalty, presenting directly to united leadership.',
-      "built a short, mid and long-term growth strategy for careshub's $500k initiative across marketing, data analytics and geographic expansion.",
+      'led a 5-person consulting team advising united airlines on improving its recruiting pipelines and mileageplus loyalty marketing. built data-driven recommendations and presented them directly to united airlines leadership.',
+      "developed a short-, mid-, and long-term growth strategy for careshub's $500k initiative to launch a dedicated mental health clinic for purdue engineering students, spanning marketing, data analytics and geographic expansion.",
     ],
   },
   {
-    when: "summers '25 & '26",
-    org: 'infinity automated solutions',
-    role: 'corporate strategy & ops intern',
-    points: [
-      'ran audits across every department and built systems to improve efficiency. on the deal team negotiating a sales deal with dollar general.',
-      'led southeast asia market-entry analysis with financial models and m&a screens. opened 3 markets (indonesia, hong kong, singapore) for a 15% lift in qualified leads and a projected $250k in new revenue.',
-      'built infinitysols.com from scratch.',
-    ],
-  },
-  {
-    when: 'jan 2020 — aug 2025',
+    when: 'jan 2020 – aug 2025',
     org: 'mindcord',
     role: 'founder & ceo',
     points: [
-      'grew a 130k+ member global stem, entrepreneurship and finance community from zero with monthly competitions, no outside backing, before college. featured in teenager today.',
-      'flagged as a prospect by the thiel fellowship, dorm room fund and z fellows.',
+      'built a global stem, entrepreneurship and finance community from zero to 130,000+ members before college through monthly competitions and curated content, with zero outside funding. featured in teenager today.',
+      'recognized as a prospect by the thiel fellowship, dorm room fund and z fellows prior to enrolling at purdue.',
+    ],
+  },
+  {
+    when: 'may – aug 2026',
+    org: 'infinity automated solutions',
+    role: 'corporate strategy & ops intern · returned for a second summer',
+    points: [
+      'led southeast asia market-entry analysis for a packaging-automation manufacturer with 800+ installations and 400+ clients. built financial models and m&a screens to prioritize international expansion.',
+      'opened 3 new markets (indonesia, hong kong, singapore), lifting qualified leads 15% and projecting $250k in revenue.',
+      'ran company-wide efficiency audits. sat on the deal team that closed a strategic sales agreement with dollar general.',
     ],
   },
   {
@@ -93,48 +95,49 @@ export const experience: ResumeEntry[] = [
     org: 'goldman sachs',
     role: 'possibilities summit · 4% acceptance',
     points: [
-      'year-long program working with gs professionals across investment banking, asset management and markets on capital markets, deal structuring and investment strategy.',
+      'completed a year-long program with senior professionals across investment banking, asset management and markets.',
     ],
   },
   {
-    when: 'jul — aug 2024',
+    when: 'jul – aug 2024',
     org: 'clemson university',
     role: 'research intern',
     points: [
-      'studied subtractive and additive manufacturing under associate dean xin zhao. sole-authored 2 peer-reviewed papers on ssrn (lipss in laser physics, pollutant removal).',
+      'investigated subtractive and additive manufacturing under associate dean xin zhao. sole-authored 2 papers published on ssrn covering high/low-frequency lipss in laser physics and pollutant removal in environmental science.',
     ],
   },
 ];
 
 export const recognition = [
+  { tag: 'winner', title: 'moss long horizon award', detail: 'calhacks 13.0 · uc berkeley, 3,000 hackers' },
+  { tag: '1st', title: 'apify 1st customer award', detail: 'calhacks 13.0 · uc berkeley, 3,000 hackers' },
   { tag: '$1k', title: 'burton d. morgan venture concept competition', detail: 'special prize winner, purdue' },
-  { tag: '$5k', title: 'purdue venturex2', detail: 'venture grant' },
-  { tag: 'top 70 / 9k', title: 'tks unicorn scholar', detail: '$500 scholarship, international pool' },
+  { tag: 'top 70 / 9k', title: 'tks unicorn scholar', detail: '$500 scholarship, 9,000+ international applicants' },
   { tag: 'top 0.02%', title: 'national cyber olympiad', detail: 'among 5 million students' },
   { tag: '$1.6k', title: 'amp global youth scholar', detail: 'international merit scholarship · un recognition for refugee awareness' },
-  { tag: '$1k', title: 'dartmouth cid alumni scholar', detail: 'creativity, innovation + design program' },
-  { tag: '2 papers', title: 'published researcher', detail: 'ssrn · laser physics, environmental science' },
-  { tag: 'silver', title: 'state-level football', detail: 'u-16' },
 ];
 
 export const skills = [
-  { label: 'technical', items: ['javascript', 'react', 'react native', 'html/css', 'python', 'node.js', 'postgresql', 'rest apis', 'excel', 'matlab', 'fusion 360'] },
+  { label: 'technical', items: ['javascript', 'typescript', 'python', 'swift', 'rust', 'react', 'react native', 'next.js', 'node.js', 'tauri', 'electron', 'html/css', 'postgresql', 'supabase', 'convex', 'rest apis', 'claude api', 'llm agents', 'git', 'vercel', 'excel', 'matlab', 'fusion 360'] },
   { label: 'languages', items: ['english', 'hindi', 'marathi', 'marwari', 'sanskrit'] },
-  { label: 'interests', items: ['premier league', 'swimming', 'soccer', 'standup comedy', 'coding', 'robotics'] },
+  { label: 'interests', items: ['premier league', 'swimming', 'soccer (u-16 state silver)', 'standup comedy', 'coding'] },
 ];
 
-// names and context only; the world map keeps its own coordinates
+// named on the one-pager; the portfolio page has the full set
+export const resumeProjects = ['workro.in', 'assembly labs', 'okidoki', 'char', 'brewed (app store)'];
+
+// names, countries and context only; the world map keeps its own coordinates
 export const places = [
-  { name: 'pune, india', context: 'hometown' },
-  { name: 'west lafayette, indiana', context: 'purdue university' },
-  { name: 'mauritius', context: 'traveled' },
-  { name: 'singapore', context: 'traveled' },
-  { name: 'switzerland', context: 'traveled' },
-  { name: 'spain', context: 'traveled' },
-  { name: 'los angeles, california', context: 'traveled' },
-  { name: 'san diego, california', context: 'traveled' },
-  { name: 'gettysburg, pennsylvania', context: 'lincoln leadership institute' },
-  { name: 'chicago, illinois', context: 'traveled' },
-  { name: 'indianapolis, indiana', context: 'traveled' },
-  { name: 'cincinnati, ohio', context: 'traveled' },
+  { name: 'pune, india', country: 'india', context: 'hometown' },
+  { name: 'west lafayette, indiana', country: 'usa', context: 'purdue university' },
+  { name: 'mauritius', country: 'mauritius', context: 'traveled' },
+  { name: 'singapore', country: 'singapore', context: 'traveled' },
+  { name: 'switzerland', country: 'switzerland', context: 'traveled' },
+  { name: 'spain', country: 'spain', context: 'traveled' },
+  { name: 'los angeles, california', country: 'usa', context: 'traveled' },
+  { name: 'san diego, california', country: 'usa', context: 'traveled' },
+  { name: 'gettysburg, pennsylvania', country: 'usa', context: 'lincoln leadership institute' },
+  { name: 'chicago, illinois', country: 'usa', context: 'traveled' },
+  { name: 'indianapolis, indiana', country: 'usa', context: 'traveled' },
+  { name: 'cincinnati, ohio', country: 'usa', context: 'traveled' },
 ];

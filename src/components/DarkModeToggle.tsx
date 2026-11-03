@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { flushSync } from 'react-dom';
-import { Sun, Moon } from 'lucide-react';
+import { PixelIcon } from './SectionHeading';
 import { prefersReducedMotion } from '../lib/dither';
 
 interface DarkModeToggleProps {
@@ -44,7 +44,14 @@ export default function DarkModeToggle({ isDark, onToggle }: DarkModeToggleProps
       className="relative p-2 rounded-full hover:bg-[var(--bg-secondary)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--text-primary)] pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5 pointer-coarse:after:content-['']"
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      {isDark ? <Sun size={14} strokeWidth={1.5} /> : <Moon size={14} strokeWidth={1.5} />}
+      <span className="theme-orb" data-dark={isDark} aria-hidden="true">
+        <span className="theme-orb__sun">
+          <PixelIcon name="sun" size={14} instant />
+        </span>
+        <span className="theme-orb__moon">
+          <PixelIcon name="moon" size={14} instant />
+        </span>
+      </span>
     </button>
   );
 }

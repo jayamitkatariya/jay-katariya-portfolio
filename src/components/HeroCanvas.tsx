@@ -268,8 +268,8 @@ export default function HeroCanvas({ isDark = false }: { isDark?: boolean }) {
       const now = performance.now();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
-      const bgColor = isDarkRef.current ? '#0a0a0a' : '#ffffff';
-      const fgColor = isDarkRef.current ? '#f5f5f5' : '#111111';
+      const bgColor = isDarkRef.current ? '#111112' : '#faf9f6';
+      const fgColor = isDarkRef.current ? '#f0eee9' : '#1b1a17';
       if (currentInverted) {
         ctx.fillStyle = fgColor;
         ctx.fillRect(0, 0, W, H);

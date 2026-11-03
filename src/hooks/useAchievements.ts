@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, createContext, useContext } from 'react';
 import { onAppReady } from '../lib/appReady';
+import type { SpriteName } from '../components/SectionHeading';
 
 export type AchievementId =
   | 'explorer' | 'photographer' | 'navigator' | 'night_owl' | 'early_bird'
@@ -9,20 +10,20 @@ export interface Achievement {
   id: AchievementId;
   name: string;
   description: string;
-  icon: string;
+  icon: SpriteName;
   // vague nudge shown in the panel while locked
   hint: string;
 }
 
 export const ACHIEVEMENTS: Achievement[] = [
-  { id: 'explorer', name: 'explorer', description: 'visited 3 different pages', icon: '🧭', hint: 'wander around a little' },
-  { id: 'photographer', name: 'photographer', description: 'opened the lightbox', icon: '📷', hint: 'some memories deserve a closer look' },
-  { id: 'navigator', name: 'navigator', description: 'used a keyboard shortcut', icon: '⌨️', hint: 'who needs a mouse?' },
-  { id: 'night_owl', name: 'night owl', description: 'visited after midnight', icon: '🌙', hint: 'come back when everyone is asleep' },
-  { id: 'early_bird', name: 'early bird', description: 'visited before 7am', icon: '🌅', hint: 'the early bird gets…' },
-  { id: 'indecisive', name: 'indecisive', description: 'flipped the lights 10 times', icon: '🪩', hint: 'light or dark? make up your mind' },
-  { id: 'regular', name: 'regular', description: 'came back another day', icon: '🔁', hint: 'see you tomorrow?' },
-  { id: 'robot', name: 'beep boop', description: 'read the site the way an agent does', icon: '🤖', hint: 'not everyone reading this is human' },
+  { id: 'explorer', name: 'explorer', description: 'visited 3 different pages', icon: 'globe', hint: 'wander around a little' },
+  { id: 'photographer', name: 'photographer', description: 'opened the lightbox', icon: 'camera', hint: 'some memories deserve a closer look' },
+  { id: 'navigator', name: 'navigator', description: 'used a keyboard shortcut', icon: 'arrow', hint: 'who needs a mouse?' },
+  { id: 'night_owl', name: 'night owl', description: 'visited after midnight', icon: 'moon', hint: 'come back when everyone is asleep' },
+  { id: 'early_bird', name: 'early bird', description: 'visited before 7am', icon: 'star', hint: 'the early bird gets…' },
+  { id: 'indecisive', name: 'indecisive', description: 'flipped the lights 10 times', icon: 'disco', hint: 'light or dark? make up your mind' },
+  { id: 'regular', name: 'regular', description: 'came back another day', icon: 'hourglass', hint: 'see you tomorrow?' },
+  { id: 'robot', name: 'beep boop', description: 'read the site the way an agent does', icon: 'robot', hint: 'not everyone reading this is human' },
 ];
 
 const STORAGE_KEY = 'jay-achievements';

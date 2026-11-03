@@ -4,9 +4,9 @@ import PixelFill from './PixelFill';
 
 const OPTIONS = [
   { key: 'hiring', label: 'hiring', href: 'https://linkedin.com/in/jkatariya', external: true },
-  { key: 'question', label: 'quick question', href: 'mailto:jkatariy@purdue.edu?subject=quick%20question', external: false },
-  { key: 'collab', label: 'collaboration', href: 'mailto:jkatariy@purdue.edu', external: false },
-  { key: 'hello', label: 'just saying hi', href: 'mailto:jkatariy@purdue.edu?subject=hi%21', external: false },
+  { key: 'question', label: 'quick question', href: 'mailto:hi@jaykatariya.com?subject=quick%20question', external: false },
+  { key: 'collab', label: 'collaboration', href: 'mailto:hi@jaykatariya.com', external: false },
+  { key: 'hello', label: 'just saying hi', href: 'mailto:hi@jaykatariya.com?subject=hi%21', external: false },
 ] as const;
 
 export default function SmartContactRouting() {
@@ -46,7 +46,7 @@ export default function SmartContactRouting() {
                 <button
                   key={opt.key}
                   onClick={() => handleClick(opt.key)}
-                  className="group relative overflow-hidden border border-[var(--border-primary)] rounded-full px-5 sm:px-6 py-3 font-mono text-xs sm:text-sm hover:border-[var(--text-primary)] hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                  className="group relative overflow-hidden border border-[var(--border-primary)] rounded-full px-5 sm:px-6 py-3 font-mono text-xs sm:text-sm hover:border-[var(--text-primary)] transition-colors duration-300"
                 >
                   <PixelFill />
                   <span className="relative transition-colors duration-150 group-hover:delay-100 group-hover:text-[var(--bg-primary)]">{opt.label}</span>
@@ -77,7 +77,7 @@ export default function SmartContactRouting() {
 
       {/* Fallback contact info */}
       <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-0 sm:gap-x-2 font-mono text-[11px] sm:text-xs text-[var(--text-tertiary)]">
-        <a href="mailto:jkatariy@purdue.edu" className="inline-flex items-center min-h-10 px-2 hover:text-[var(--text-primary)] transition-colors">jkatariy@purdue.edu</a>
+        <a href="mailto:hi@jaykatariya.com" className="inline-flex items-center min-h-10 px-2 hover:text-[var(--text-primary)] transition-colors">hi@jaykatariya.com</a>
         <span className="hidden sm:inline">·</span>
         <a href="tel:+17655438168" className="inline-flex items-center min-h-10 px-2 hover:text-[var(--text-primary)] transition-colors">(765) 543-8168</a>
         <span className="hidden sm:inline">·</span>

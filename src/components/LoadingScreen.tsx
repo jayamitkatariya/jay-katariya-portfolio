@@ -54,7 +54,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
     // colour — never a parsing fallback, which would paint the whole cover black
     const root = document.documentElement;
     const dark = root.classList.contains('dark');
-    ctx.fillStyle = getComputedStyle(root).getPropertyValue('--bg-primary').trim() || (dark ? '#0a0a0a' : '#ffffff');
+    ctx.fillStyle = getComputedStyle(root).getPropertyValue('--bg-primary').trim() || (dark ? '#111112' : '#faf9f6');
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const cx = window.innerWidth / 2 / TILE;

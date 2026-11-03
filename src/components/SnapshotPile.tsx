@@ -129,7 +129,7 @@ export default function SnapshotPile() {
           <span className="ml-2 text-[#737373]">~/memories</span>
         </div>
         <div className="px-3 py-3 leading-relaxed">
-          <p><span className="text-emerald-400">$</span> ls | wc -l</p>
+          <p><span className="text-[#28c840]">$</span> ls | wc -l</p>
           <p className="text-[#a3a3a3]">68</p>
           <p className="mt-1.5 text-[#a3a3a3]">
             <span className="pointer-coarse:hidden">hover to develop. drag to rearrange.</span>

@@ -1,8 +1,10 @@
 import { useEffect, useCallback } from 'react';
 
 interface ShortcutActions {
-  setPage: (page: 'home' | 'portfolio' | 'memories' | 'resume') => void;
+  setPage: (page: 'home' | 'portfolio' | 'writing' | 'memories' | 'resume') => void;
   toggleHelp: () => void;
+  toggleAgent?: () => void;
+  toggleAchievements?: () => void;
   closeOverlays: () => void;
   onShortcutUsed?: () => void;
 }
@@ -30,15 +32,27 @@ export function useKeyboardShortcuts(actions: ShortcutActions, enabled = true) {
         actions.onShortcutUsed?.();
         break;
       case '3':
-        actions.setPage('memories');
+        actions.setPage('writing');
         actions.onShortcutUsed?.();
         break;
       case '4':
+        actions.setPage('memories');
+        actions.onShortcutUsed?.();
+        break;
+      case '5':
         actions.setPage('resume');
         actions.onShortcutUsed?.();
         break;
       case '?':
         actions.toggleHelp();
+        actions.onShortcutUsed?.();
+        break;
+      case 'a':
+        actions.toggleAgent?.();
+        actions.onShortcutUsed?.();
+        break;
+      case 'x':
+        actions.toggleAchievements?.();
         actions.onShortcutUsed?.();
         break;
       case 'Escape':

@@ -23,6 +23,11 @@ export default function PixelWipe() {
   useEffect(() => {
     // compare paths rather than a first-run flag, so StrictMode's double effect doesn't wipe on load
     if (prevPath.current === pathname) return;
+    // writing index <-> article is handled by the paper tear, not the pixel wipe
+    if (prevPath.current.startsWith('/writing') && pathname.startsWith('/writing')) {
+      prevPath.current = pathname;
+      return;
+    }
     prevPath.current = pathname;
     if (prefersReducedMotion()) return;
     setRun(r => r + 1);

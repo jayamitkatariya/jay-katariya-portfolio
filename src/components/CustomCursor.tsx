@@ -10,6 +10,7 @@ const hasFinePointer = () => typeof window !== 'undefined' && window.matchMedia(
 export default function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [enabled, setEnabled] = useState(hasFinePointer);
 
@@ -29,7 +30,7 @@ export default function CustomCursor() {
 
     document.documentElement.classList.add('custom-cursor-active');
 
-    const s = { mouseX: -100, mouseY: -100, ringX: -100, ringY: -100, hovering: false, clicking: false, shown: false };
+    const s = { mouseX: -100, mouseY: -100, ringX: -100, ringY: -100, hovering: false, clicking: false, shown: false, label: '', lastLabel: '' };
     let frameId = 0;
     let running = false;
 
@@ -41,6 +42,16 @@ export default function CustomCursor() {
       ring.style.width = ring.style.height = `${size}px`;
       ring.style.transform = `translate(${s.ringX - size / 2}px, ${s.ringY - size / 2}px)`;
       ring.style.borderWidth = s.hovering ? '1.5px' : '1px';
+
+      const label = labelRef.current;
+      if (label) {
+        if (s.label !== s.lastLabel) {
+          label.textContent = s.label;
+          s.lastLabel = s.label;
+        }
+        label.style.transform = `translate(${s.ringX + 16}px, ${s.ringY + 12}px)`;
+        label.style.opacity = s.label ? '1' : '0';
+      }
 
       if (Math.abs(s.mouseX - s.ringX) + Math.abs(s.mouseY - s.ringY) < 0.3) {
         running = false;
@@ -63,7 +74,9 @@ export default function CustomCursor() {
     const handleMove = (e: MouseEvent) => {
       s.mouseX = e.clientX;
       s.mouseY = e.clientY;
-      s.hovering = !!(e.target as HTMLElement).closest?.('a, button, [role="button"], input, textarea, select, [data-cursor-hover]');
+      const target = e.target as HTMLElement;
+      s.hovering = !!target.closest?.('a, button, [role="button"], input, textarea, select, [data-cursor-hover]');
+      s.label = (target.closest?.('[data-cursor-label]') as HTMLElement | null)?.dataset.cursorLabel ?? '';
       show(true);
       wake();
     };
@@ -99,6 +112,13 @@ export default function CustomCursor() {
       <div
         ref={ringRef}
         className={`fixed top-0 left-0 border border-white/40 mix-blend-difference rounded-full pointer-events-none z-[9999] transition-[width,height,opacity,border-width] duration-200 ease-out ${visible ? 'opacity-100' : 'opacity-0'}`}
+      />
+      <div
+        ref={labelRef}
+        data-cursor-label-el
+        aria-hidden="true"
+        className="fixed top-0 left-0 z-[9999] pointer-events-none rounded-full bg-[var(--text-primary)] px-2 py-0.5 font-mono text-[8px] tracking-[0.16em] text-[var(--bg-primary)] opacity-0 transition-opacity duration-150"
+        style={{ willChange: 'transform' }}
       />
     </>
   );

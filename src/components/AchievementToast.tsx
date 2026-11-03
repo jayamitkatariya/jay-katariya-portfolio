@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { Achievement } from '../hooks/useAchievements';
+import { PixelIcon } from './SectionHeading';
 
 interface AchievementToastProps {
   achievement: Achievement | null;
@@ -25,12 +26,12 @@ export default function AchievementToast({ achievement, onDismiss }: Achievement
           initial={{ opacity: 0, y: 80, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          className="fixed inset-x-4 mx-auto w-fit max-w-sm bottom-[calc(5rem+env(safe-area-inset-bottom))] sm:bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[110] pointer-events-auto cursor-pointer"
+          transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+          className="fixed inset-x-4 mx-auto w-fit max-w-sm bottom-[calc(8.5rem+env(safe-area-inset-bottom))] sm:bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[70] pointer-events-auto cursor-pointer"
           onClick={onDismiss}
         >
           <div className="flex items-center gap-3 bg-[var(--text-primary)] text-[var(--bg-primary)] rounded-xl px-4 py-3 shadow-2xl border border-[var(--border-primary)]">
-            <span className="text-lg">{achievement.icon}</span>
+            <PixelIcon name={achievement.icon} size={18} instant />
             <div>
               <div className="font-mono text-[10px] tracking-widest uppercase opacity-60 mb-0.5">
                 achievement unlocked

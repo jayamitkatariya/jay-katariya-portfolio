@@ -3,6 +3,7 @@ import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { useDialogFocus } from '../hooks/useDialogFocus';
 import { motion, AnimatePresence } from 'motion/react';
 import { ACHIEVEMENTS, type AchievementId } from '../hooks/useAchievements';
+import { PixelIcon } from './SectionHeading';
 
 interface AchievementsPanelProps {
   isOpen: boolean;
@@ -45,7 +46,7 @@ export default function AchievementsPanel({ isOpen, onClose, unlocked }: Achieve
             transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[81] w-[90vw] max-w-sm"
           >
-            <div className="bg-[var(--card-bg)] backdrop-blur-xl border border-[var(--border-primary)] rounded-2xl shadow-2xl p-6 sm:p-8 max-h-[80dvh] overflow-y-auto overscroll-contain">
+            <div className="bg-[var(--card-bg)] border border-[var(--border-primary)] rounded-2xl shadow-2xl p-6 sm:p-8 max-h-[80dvh] overflow-y-auto overscroll-contain">
               <div className="flex items-center justify-between mb-1 -mt-2">
                 <h3 className="font-mono text-xs tracking-widest text-[var(--text-secondary)] uppercase">achievements</h3>
                 <button
@@ -70,8 +71,8 @@ export default function AchievementsPanel({ isOpen, onClose, unlocked }: Achieve
                   const has = unlocked.has(a.id);
                   return (
                     <li key={a.id} className="flex items-center gap-3">
-                      <span className={`w-8 h-8 shrink-0 grid place-items-center rounded-lg border border-[var(--border-primary)] text-base ${has ? '' : 'grayscale opacity-40'}`}>
-                        {has ? a.icon : '?'}
+                      <span className={`w-8 h-8 shrink-0 grid place-items-center rounded-lg border border-[var(--border-primary)] ${has ? '' : 'grayscale opacity-40'}`}>
+                        {has ? <PixelIcon name={a.icon} size={16} instant /> : '?'}
                       </span>
                       <div className="min-w-0">
                         <div className={`font-mono text-xs tracking-wider ${has ? 'text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}>

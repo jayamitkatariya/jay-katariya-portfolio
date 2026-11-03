@@ -261,7 +261,7 @@ function MemoryTile({ item, enterDelay, still, onOpen }: TileProps) {
         </AnimatePresence>
       </div>
       <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-      <span className="absolute left-2 bottom-1.5 sm:left-2.5 sm:bottom-2 font-mono text-[9px] sm:text-[10px] tracking-widest text-white/90 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+      <span className="absolute left-2 bottom-1.5 sm:left-2.5 sm:bottom-2 font-mono text-[9px] sm:text-[10px] tracking-widest text-white/90 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-[opacity,translate] duration-300 pointer-events-none">
         {label(item.photoNum)}
       </span>
     </motion.div>
@@ -434,7 +434,6 @@ export default function MemoriesPage() {
       <PageHeader
         title="memories"
         icon="camera"
-        iconColor="text-pink-500"
         className="shrink-0 w-full max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-20 sm:pt-24 md:pt-28 short:pt-16 pb-4 sm:pb-5 short:pb-2"
       >
         {!still && (
@@ -503,7 +502,7 @@ export default function MemoriesPage() {
               if (Math.abs(dx) > 50) navLb(dx > 0 ? -1 : 1);
             }}
           >
-            <div className="absolute inset-0 bg-[#0a0a0a]/92 backdrop-blur-md" />
+            <div className="absolute inset-0 bg-[#111112]/92 backdrop-blur-md" />
 
             <button
               ref={closeBtnRef}
