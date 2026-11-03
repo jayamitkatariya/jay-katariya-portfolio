@@ -269,28 +269,27 @@ export default function App() {
             over scrolling pixel art makes dots look like they freeze in place. */}
         <div aria-hidden="true" className={`absolute left-0 top-full w-full h-4 pointer-events-none bg-gradient-to-b from-[var(--nav-bg)] to-transparent transition-opacity duration-300 ${navSolid ? 'opacity-100' : 'opacity-0'}`} />
         <Link to="/" className="font-mono text-xs tracking-widest font-bold hover:text-[var(--text-secondary)] transition-colors -mx-2 px-2 py-2 pointer-coarse:py-3.5">jk.</Link>
-        {/* Static on purpose: weight never changes, so links don't shift when the active page changes */}
-        <div className="hidden sm:flex items-center gap-2 md:gap-6 font-mono text-xs tracking-widest text-[var(--text-secondary)]">
-          {PAGES.map(([page, to]) => (
-            <Link
-              key={page}
-              to={to}
-              aria-current={currentPage === page ? 'page' : undefined}
-              className={`relative inline-block whitespace-nowrap px-3 py-2 pointer-coarse:py-3.5 transition-colors duration-200 ${
-                currentPage === page ? 'text-[var(--text-primary)]' : 'hover:text-[var(--text-primary)]'
-              }`}
-            >
-              {page}
-              {currentPage === page && (
-                <span className="absolute -bottom-0.5 pointer-coarse:bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[var(--text-primary)] rounded-full" />
-              )}
-            </Link>
-          ))}
-          <DarkModeToggle isDark={isDark} onToggle={handleDarkModeToggle} />
-        </div>
+        <div className="flex items-center gap-2 md:gap-4">
+          {/* Static on purpose: weight never changes, so links don't shift when the active page changes */}
+          <div className="hidden sm:flex items-center gap-2 md:gap-6 font-mono text-xs tracking-widest text-[var(--text-secondary)]">
+            {PAGES.map(([page, to]) => (
+              <Link
+                key={page}
+                to={to}
+                aria-current={currentPage === page ? 'page' : undefined}
+                className={`relative inline-block whitespace-nowrap px-3 py-2 pointer-coarse:py-3.5 transition-colors duration-200 ${
+                  currentPage === page ? 'text-[var(--text-primary)]' : 'hover:text-[var(--text-primary)]'
+                }`}
+              >
+                {page}
+                {currentPage === page && (
+                  <span className="absolute -bottom-0.5 pointer-coarse:bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[var(--text-primary)] rounded-full" />
+                )}
+              </Link>
+            ))}
+          </div>
 
-        {/* Phones: two controls instead of five crushed links */}
-        <div className="flex items-center gap-0.5 sm:hidden">
+          {/* one toggle for both layouts; only the menu button is phone-only */}
           <DarkModeToggle isDark={isDark} onToggle={handleDarkModeToggle} />
           <button
             ref={menuButtonRef}
@@ -299,7 +298,7 @@ export default function App() {
             aria-expanded={menuOpen}
             aria-controls={menuOpen ? 'mobile-menu' : undefined}
             aria-label={menuOpen ? 'close menu' : 'open menu'}
-            className="grid h-11 w-11 place-items-center rounded-full text-[var(--text-primary)] transition-colors active:bg-[var(--bg-secondary)]"
+            className="grid h-11 w-11 place-items-center rounded-full text-[var(--text-primary)] transition-colors active:bg-[var(--bg-secondary)] sm:hidden"
           >
             {menuOpen ? <X size={19} strokeWidth={1.7} /> : <Menu size={19} strokeWidth={1.7} />}
           </button>
