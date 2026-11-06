@@ -53,7 +53,7 @@ export default function AgentView({ onExit }: AgentViewProps) {
           <nav aria-label="agent mode" className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
             <a href="/llms.txt">/llms.txt</a>
             <a href="/index.md">/index.md</a>
-            <button type="button" onClick={copy} className="agent-link">{copied ? 'copied ✓' : 'copy as markdown'}</button>
+            <button type="button" onClick={copy} data-sound="none" data-copied={copied} className="agent-link">{copied ? 'copied ✓' : 'copy as markdown'}</button>
             <button type="button" onClick={onExit} className="agent-link">exit agent mode</button>
           </nav>
         </header>

@@ -35,13 +35,15 @@ function agentFiles(): Plugin {
 // canonical url instead of the home page's. The SPA takes over from there as usual.
 function routeHtml(): Plugin {
   const SITE = 'https://www.jaykatariya.com';
-  const pages: Record<string, string> = {
-    portfolio: 'Portfolio | Jay Katariya',
-    writing: 'Writing | Jay Katariya',
-    memories: 'Memories | Jay Katariya',
-    resume: 'Resume | Jay Katariya',
-    ...Object.fromEntries(writingNotes.map(note => [`writing/${note.slug}`, `${note.title} | Jay Katariya`])),
+  // [title, description]; every page gets its own, or search and link previews all show the home page's
+  const pages: Record<string, [string, string]> = {
+    portfolio: ['Portfolio | Jay Katariya', 'Startups, consulting and personal projects by Jay Katariya: Workro, MindCord and more, with demos and source.'],
+    writing: ['Writing | Jay Katariya', 'Short notes by Jay Katariya on building things, design and the making of this site.'],
+    memories: ['Memories | Jay Katariya', 'A contact sheet of 68 photos: friends, travel, home, the lab, the water, the win.'],
+    resume: ['Resume | Jay Katariya', 'Resume of Jay Katariya: Integrated Business & Engineering at Purdue, Cofounder & CEO of Workro, founder of MindCord.'],
+    ...Object.fromEntries(writingNotes.map(note => [`writing/${note.slug}`, [`${note.title} | Jay Katariya`, note.lede]])),
   };
+  const attr = (v: string) => v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
   return {
     name: 'route-html',
     apply: 'build',
@@ -50,11 +52,12 @@ function routeHtml(): Plugin {
       const index = bundle['index.html'];
       if (index?.type !== 'asset') return;
       const html = String(index.source);
-      for (const [route, title] of Object.entries(pages)) {
+      for (const [route, [title, description]] of Object.entries(pages)) {
         const url = `${SITE}/${route}`;
         const source = html
-          .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
-          .replace(/(<meta (?:property="og:title"|name="twitter:title") content=")[^"]*"/g, `$1${title}"`)
+          .replace(/<title>[^<]*<\/title>/, `<title>${attr(title)}</title>`)
+          .replace(/(<meta (?:property="og:title"|name="twitter:title") content=")[^"]*"/g, `$1${attr(title)}"`)
+          .replace(/(<meta (?:name="description"|property="og:description"|name="twitter:description") content=")[^"]*"/g, `$1${attr(description)}"`)
           .replace(/(<meta property="og:url" content=")[^"]*"/, `$1${url}"`)
           .replace(/(<link rel="canonical" href=")[^"]*"/, `$1${url}"`);
         this.emitFile({type: 'asset', fileName: `${route}/index.html`, source});

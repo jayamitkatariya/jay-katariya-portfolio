@@ -34,11 +34,13 @@ export default function AchievementToast({ achievement, onDismiss }: Achievement
         <motion.div
           // keyed: a queued unlock animates in on its own instead of swapping text in place
           key={achievement.id}
+          // SoundEffects plays the unlock when this appears
+          data-success="true"
           initial={{ opacity: 0, y: 80, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
           transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          className="fixed inset-x-4 mx-auto w-fit max-w-sm bottom-[calc(8.5rem+env(safe-area-inset-bottom))] sm:bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[70] pointer-events-auto"
+          className="fixed inset-x-4 mx-auto w-fit max-w-sm bottom-[calc(8.5rem+env(safe-area-inset-bottom))] sm:bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[110] pointer-events-auto"
           onPointerEnter={() => setHeld(true)}
           onPointerLeave={() => setHeld(false)}
           onFocus={() => setHeld(true)}
@@ -47,6 +49,7 @@ export default function AchievementToast({ achievement, onDismiss }: Achievement
           <button
             type="button"
             onClick={onDismiss}
+            data-sound="none"
             className="flex items-center gap-3 text-left cursor-pointer bg-[var(--text-primary)] text-[var(--bg-primary)] rounded-xl px-4 py-3 shadow-2xl border border-[var(--border-primary)] transition-[scale] duration-150 ease-out active:scale-[0.97]"
           >
             <PixelIcon name={achievement.icon} size={18} instant />

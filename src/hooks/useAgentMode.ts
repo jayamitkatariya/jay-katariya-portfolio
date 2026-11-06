@@ -35,6 +35,14 @@ export function useAgentMode() {
   const setAgent = useCallback((on: boolean) => {
     save(on);
     setIsAgent(on);
+    // a ?agent= in the address would override this choice on the next reload
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('agent')) {
+        url.searchParams.delete('agent');
+        window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+      }
+    } catch {}
   }, []);
 
   return { isAgent, setAgent };

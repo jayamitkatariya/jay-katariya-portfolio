@@ -249,6 +249,7 @@ function MemoryTile({ item, enterDelay, still, onOpen }: TileProps) {
       role="button"
       tabIndex={0}
       aria-label={`open memory ${item.photoNum}`}
+      data-sound="open"
       // size is set directly; only position springs (animating width/height relayouts every frame)
       style={{ width: item.w, height: item.h }}
       initial={{ opacity: 0, x: item.x, y: item.y }}
@@ -400,9 +401,15 @@ export default function MemoriesPage() {
     setLbPhoto(cur => (cur === null ? cur : MASTER[(MASTER.indexOf(cur) + dir + TOTAL) % TOTAL]));
   }, []);
 
+  // focus lands on close when the lightbox opens, not on every step: otherwise a
+  // second Enter on "next photo" would press close
+  const lbIsOpen = lbPhoto !== null;
+  useEffect(() => {
+    if (lbIsOpen) closeBtnRef.current?.focus();
+  }, [lbIsOpen]);
+
   useEffect(() => {
     if (lbPhoto === null) return;
-    closeBtnRef.current?.focus();
     const i = MASTER.indexOf(lbPhoto);
     preload([src(MASTER[(i + 1) % TOTAL]), src(MASTER[(i - 1 + TOTAL) % TOTAL])]);
   }, [lbPhoto]);
@@ -456,14 +463,18 @@ export default function MemoriesPage() {
         {!still && (
           <div className="flex items-center gap-1 font-mono text-[11px] tracking-wider text-[var(--text-tertiary)]">
             <button
+              type="button"
               onClick={() => setUserPaused(p => !p)}
               aria-pressed={userPaused}
+              // pausing winds down, playing winds up
+              data-sound={userPaused ? 'toggleOn' : 'toggleOff'}
               className="relative flex items-center gap-1.5 px-3 py-1.5 pointer-coarse:py-3 rounded-full hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-[color,background-color,scale] duration-150 ease-out active:scale-[0.97] after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-['']"
             >
               {userPaused ? <Play size={12} /> : <Pause size={12} />}
               {userPaused ? 'play' : 'pause'}
             </button>
             <button
+              type="button"
               onClick={() => swap(Math.max(3, Math.floor(photos.length * 0.3)))}
               className="relative flex items-center gap-1.5 px-3 py-1.5 pointer-coarse:py-3 rounded-full hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-[color,background-color,scale] duration-150 ease-out active:scale-[0.97] after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-['']"
             >
@@ -482,7 +493,9 @@ export default function MemoriesPage() {
           // mouse only: a tap fires emulated mouse events and would leave autoplay paused
           onPointerEnter={e => e.pointerType === 'mouse' && setHovering(true)}
           onPointerLeave={e => e.pointerType === 'mouse' && setHovering(false)}
-          onFocus={() => setFocusInside(true)}
+          // keyboard focus only: a tap or click focuses the tile too, and closing the
+          // lightbox hands focus back to it, which would leave autoplay paused for good
+          onFocus={e => e.target.matches(':focus-visible') && setFocusInside(true)}
           onBlur={e => !e.currentTarget.contains(e.relatedTarget as Node | null) && setFocusInside(false)}
         >
           <div ref={containerRef} className="relative w-full h-full">
@@ -507,13 +520,19 @@ export default function MemoriesPage() {
             role="dialog"
             aria-modal="true"
             aria-label={`memory ${lbPhoto}`}
+            data-lightbox
+            // the backdrop closes; a swipe across it must not sound like a close
+            data-sound="close"
+            data-sound-on="click"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.25, delay: 0.05 } }}
             transition={{ duration: 0.25 }}
             className="fixed inset-0 z-[100] flex items-center justify-center p-4"
             // iOS ignores body overflow:hidden; this stops the page behind from scrolling
-            style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
+            // the body is pinned by the scroll lock, so pans and pinch-zoom stay available
+            // for looking closer at a photo
+            style={{ touchAction: 'manipulation', overscrollBehavior: 'contain' }}
             onClick={closeLb}
             onTouchStart={e => (touchStartX.current = e.touches[0].clientX)}
             onTouchEnd={e => {
@@ -525,22 +544,28 @@ export default function MemoriesPage() {
 
             <button
               ref={closeBtnRef}
+              type="button"
               onClick={closeLb}
               aria-label="close"
-              className="absolute top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] sm:top-[max(1.5rem,env(safe-area-inset-top))] sm:right-[max(1.5rem,env(safe-area-inset-right))] short:top-3 z-20 w-10 h-10 flex items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+              data-sound="close"
+              className="absolute top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] sm:top-[max(1.5rem,env(safe-area-inset-top))] sm:right-[max(1.5rem,env(safe-area-inset-right))] short:top-3 z-20 w-11 h-11 flex items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
             >
               <X size={20} strokeWidth={1.5} />
             </button>
             <button
+              type="button"
               onClick={e => { e.stopPropagation(); navLb(-1); }}
               aria-label="previous photo"
+              data-sound="pick"
               className="absolute left-[max(1rem,env(safe-area-inset-left))] sm:left-[max(1.5rem,env(safe-area-inset-left))] max-sm:bottom-[calc(0.25rem+env(safe-area-inset-bottom))] z-20 w-11 h-11 flex items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors"
             >
               <ChevronLeft size={24} strokeWidth={1.5} />
             </button>
             <button
+              type="button"
               onClick={e => { e.stopPropagation(); navLb(1); }}
               aria-label="next photo"
+              data-sound="pick"
               className="absolute right-[max(1rem,env(safe-area-inset-right))] sm:right-[max(1.5rem,env(safe-area-inset-right))] max-sm:bottom-[calc(0.25rem+env(safe-area-inset-bottom))] z-20 w-11 h-11 flex items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors"
             >
               <ChevronRight size={24} strokeWidth={1.5} />
@@ -558,6 +583,7 @@ export default function MemoriesPage() {
                 height={1000}
                 style={{ backgroundImage: `url(${thumb(lbPhoto)})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
                 onClick={e => e.stopPropagation()}
+                data-sound="none"
                 custom={{ d: navDir, instant: navInstant }}
                 initial={navInstant ? false : zoomFrom(lbPhoto)}
                 animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}

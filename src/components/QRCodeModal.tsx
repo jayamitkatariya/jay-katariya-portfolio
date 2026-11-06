@@ -52,6 +52,7 @@ export default function QRCodeModal({ isOpen, onClose }: QRCodeModalProps) {
           className="fixed inset-0 z-[80] flex items-center justify-center bg-black/10 backdrop-blur-[3px]"
           style={{ overscrollBehavior: 'contain' }}
           onClick={onClose}
+          data-sound="close"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -64,13 +65,16 @@ export default function QRCodeModal({ isOpen, onClose }: QRCodeModalProps) {
             aria-busy={!qrUrl && !failed}
             className="relative mx-4 max-h-[calc(100dvh-2rem)]"
             onClick={(e) => e.stopPropagation()}
+            // a click on the card itself is not a click on the backdrop behind it
+            data-sound="none"
           >
             <div className="relative bg-[var(--card-bg)] border border-[var(--border-primary)] rounded-2xl shadow-2xl px-6 pb-6 pt-12 sm:px-8 sm:pb-8 sm:pt-12 short:pt-10 short:pb-4 flex flex-col items-center gap-4 short:gap-2 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
               <button
                 ref={closeRef}
                 onClick={onClose}
                 aria-label="close"
-                className="absolute top-1.5 right-1.5 w-10 h-10 grid place-items-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-[color,background-color,border-color,scale] duration-150 ease-out active:scale-[0.96] rounded-full hover:bg-[var(--bg-secondary)]"
+                data-sound="close"
+                className="absolute top-1.5 right-1.5 w-10 h-10 pointer-coarse:w-11 pointer-coarse:h-11 grid place-items-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-[color,background-color,border-color,scale] duration-150 ease-out active:scale-[0.96] rounded-full hover:bg-[var(--bg-secondary)]"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

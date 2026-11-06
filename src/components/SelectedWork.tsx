@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { projects } from '../data/projects';
-import { awardsText, selectedWork } from '../data/home';
+import { awardsShort, awardsText, selectedWork } from '../data/home';
 import { PixelIcon } from './SectionHeading';
 
 // The only list on the home page. Company at display size, role in mono,
@@ -61,6 +61,19 @@ export default function SelectedWork() {
           full list ↗
         </Link>
       </div>
+
+      {/* phones: the one-liner won't fit, so it becomes a quiet three-column ledger */}
+      <ul className="mt-3 grid grid-cols-3 border-t border-[var(--border-primary)] font-mono sm:hidden">
+        {awardsShort.map((a, i) => (
+          <li
+            key={a.name}
+            className={`min-w-0 py-2.5 ${i > 0 ? 'border-l border-[var(--border-primary)] pl-3' : 'pr-3'} ${i === 1 ? 'pr-3' : ''}`}
+          >
+            <span className="block truncate text-[9px] tracking-[0.1em] text-[var(--text-secondary)]">{a.name}</span>
+            <span className="mt-1 block truncate text-[9px] tracking-[0.14em] text-[var(--text-tertiary)]">{a.where}</span>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

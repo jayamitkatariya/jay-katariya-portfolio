@@ -7,6 +7,9 @@ import LoadingScreen from './components/LoadingScreen';
 import { markAppReady, onAppReady } from './lib/appReady';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
 import DarkModeToggle from './components/DarkModeToggle';
+import SoundToggle from './components/SoundToggle';
+import SoundEffects from './components/SoundEffects';
+import { toggleSoundMuted } from './lib/sound/store';
 import AchievementToast from './components/AchievementToast';
 import CustomCursor from './components/CustomCursor';
 import PixelWipe from './components/PixelWipe';
@@ -140,15 +143,30 @@ export default function App() {
     if (prevPageRef.current !== null) pendingScrollRef.current = location.hash;
     prevPageRef.current = currentPage;
   }
+  const pendingTimerRef = useRef(0);
   useEffect(() => {
-    if (pendingScrollRef.current !== null) return; // the exit hands off to handlePageExitComplete
+    if (pendingScrollRef.current !== null) {
+      // the exit hands off to handlePageExitComplete. If that exit never completes (it was
+      // cancelled by navigating back mid-fade, or an error boundary reset dropped it), don't
+      // leave the page stranded at the old scroll position with hash links dead.
+      window.clearTimeout(pendingTimerRef.current);
+      pendingTimerRef.current = window.setTimeout(() => {
+        const hash = pendingScrollRef.current;
+        if (hash === null) return;
+        pendingScrollRef.current = null;
+        scrollToTarget(hash);
+      }, 600);
+      return;
+    }
     scrollToTarget(location.hash);
   }, [currentPage, location.pathname, location.hash, scrollToTarget]);
+  useEffect(() => () => window.clearTimeout(pendingTimerRef.current), []);
 
   const handlePageExitComplete = useCallback(() => {
     const hash = pendingScrollRef.current;
     if (hash === null) return;
     pendingScrollRef.current = null;
+    window.clearTimeout(pendingTimerRef.current);
     scrollToTarget(hash);
     // the link that was clicked usually unmounted with the old page; put focus on the new
     // one so the next Tab starts there instead of back at the top of the document
@@ -200,8 +218,11 @@ export default function App() {
   const [showQR, setShowQR] = useState(false);
   // the phone menu: one sheet, one open state
   const [menuOpen, setMenuOpen] = useState(false);
+  // stable, so the sheet's focus effect doesn't re-run (and yank focus) on every render
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-  useBodyScrollLock(menuOpen);
+  // agent mode renders no sheet; a menu left open must not keep the document pinned
+  useBodyScrollLock(menuOpen && !isAgent);
   // keep the lazily-loaded modal mounted after first open so its exit animation plays
   const qrMountedRef = useRef(false);
   if (showQR) qrMountedRef.current = true;
@@ -270,7 +291,11 @@ export default function App() {
       setShowShortcuts(prev => !prev);
     },
     // the footer is just a signature now, so these two live on the keyboard
-    toggleAgent: () => setAgent(true),
+    toggleAgent: () => {
+      setMenuOpen(false);
+      setAgent(true);
+    },
+    toggleSound: toggleSoundMuted,
     toggleAchievements: () => {
       if (showQR || showShortcuts) return;
       setShowAchievements(prev => !prev);
@@ -284,8 +309,9 @@ export default function App() {
     onShortcutUsed: () => achievements.unlock('navigator'),
   }), [goToPage, achievements.unlock, showQR, showAchievements, showShortcuts, setAgent]);
 
-  // agent mode is a single plain document: no page switching or help dialog behind it
-  useKeyboardShortcuts(shortcutActions, !isAgent);
+  // agent mode is a single plain document: no page switching or help dialog behind it;
+  // and nothing may open invisibly underneath the intro
+  useKeyboardShortcuts(shortcutActions, !isAgent && !isLoading);
 
   // the sheet belongs to the page it was opened on
   useEffect(() => setMenuOpen(false), [location.pathname]);
@@ -305,6 +331,7 @@ export default function App() {
     return (
       <MotionConfig reducedMotion="user">
       <AchievementContext.Provider value={achievements}>
+      <SoundEffects />
       <div className="min-h-screen bg-[var(--bg-primary)]">
         <AgentView onExit={() => setAgent(false)} />
         <AchievementToast achievement={achievements.latestUnlock} onDismiss={achievements.dismissToast} />
@@ -318,12 +345,14 @@ export default function App() {
     <MotionConfig reducedMotion="user">
     <AchievementContext.Provider value={achievements}>
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
+      <SoundEffects />
       <CustomCursor />
       <AnimatePresence>
         {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
       </AnimatePresence>
-      {/* no fade: the loader's dither dissolve is the reveal, and it should open onto the finished page */}
-      <div className={`relative z-[2] ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+      {/* no fade: the loader's dither dissolve is the reveal, and it should open onto the finished page.
+          inert while hidden, so Tab can't wander into a page nobody can see yet */}
+      <div inert={isLoading} className={`relative z-[2] ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
       {/* inside this stacking context so the nav (z-50) stays above the wipe (z-45) */}
       <PixelWipe />
       {currentPage === 'home' && <ReadingProgress />}
@@ -370,6 +399,8 @@ export default function App() {
           </div>
 
           {/* one toggle for both layouts; only the menu button is phone-only */}
+          {/* phones have no room at 320px; their sound switch lives in the menu sheet */}
+          <SoundToggle className="max-sm:hidden" />
           <DarkModeToggle isDark={isDark} onToggle={handleDarkModeToggle} />
           <button
             ref={menuButtonRef}
@@ -386,7 +417,7 @@ export default function App() {
 
         <MobileMenu
           isOpen={menuOpen}
-          onClose={() => setMenuOpen(false)}
+          onClose={closeMenu}
           currentPage={currentPage}
           returnFocusTo={menuButtonRef}
         />
@@ -523,9 +554,12 @@ export default function App() {
       <KeyboardShortcuts isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
       <AchievementToast achievement={achievements.latestUnlock} onDismiss={achievements.dismissToast} />
       {qrMountedRef.current && (
-        <Suspense fallback={null}>
-          <QRCodeModal isOpen={showQR} onClose={() => setShowQR(false)} />
-        </Suspense>
+        // its own boundary: a stale chunk after a redeploy must not take the whole site down
+        <ErrorBoundary fallback={null} resetKey={showQR} onError={() => setShowQR(false)}>
+          <Suspense fallback={null}>
+            <QRCodeModal isOpen={showQR} onClose={() => setShowQR(false)} />
+          </Suspense>
+        </ErrorBoundary>
       )}
       </div>
     </div>

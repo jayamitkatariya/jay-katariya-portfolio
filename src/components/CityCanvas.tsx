@@ -1,10 +1,12 @@
+import type React from 'react';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { bayerAt } from '../lib/dither';
 import { onAppReady } from '../lib/appReady';
+import { emitSound } from '../lib/sound/engine';
 
 // A living 1-bit city: three skyline layers, a clock tower showing Lafayette
 // time, a river of window light, a plane, small stars, a sun/moon that follows
-// the theme — and birds. Click the sky and one flies out, lands on a free
+// the theme, clouds that drift by day and part for the night — and birds. Click the sky and one flies out, lands on a free
 // rooftop and stays. Scroll down and the whole flock lifts off; scroll back to
 // the top and they swoop home. Every shape is drawn on a grid, so it stays crisp.
 
@@ -16,6 +18,8 @@ interface CityCanvasProps {
   isDark: boolean;
   paused: boolean;
   onBirdsChange?: (n: number) => void;
+  /** clouds keep out of this element's rows (the name and tagline) */
+  avoidRef?: React.RefObject<HTMLElement | null>;
 }
 
 const LAFAYETTE = 'America/Indiana/Indianapolis';
@@ -33,6 +37,9 @@ type Palette = {
   warm: string;
   unlit: string;
   star: string;
+  cloud: string;
+  cloudShade: string;
+  cloudEdge: string;
   moon: string;
   halo: string;
   river: string;
@@ -59,6 +66,9 @@ const paletteFor = (dark: boolean): Palette =>
         warm: '#f0eee9',
         unlit: '#20202a',
         star: '#f0eee9',
+        cloud: '#1d1d2c',
+        cloudShade: '#121219',
+        cloudEdge: '#2a2a3d',
         moon: '#f0eee9',
         halo: '#8b83f2',
         river: '#07070b',
@@ -82,6 +92,9 @@ const paletteFor = (dark: boolean): Palette =>
         warm: '#faf9f6',
         unlit: '#3a372e',
         star: '#767268',
+        cloud: '#ffffff',
+        cloudShade: '#ddd9e8',
+        cloudEdge: '#cfcadb',
         moon: '#4a43c4',
         halo: '#4a43c4',
         river: '#eae7e0',
@@ -108,6 +121,9 @@ const DUSK: Palette = {
   warm: '#ffe6c2',
   unlit: '#2a2130',
   star: '#ffe9cf',
+  cloud: '#f2b9a4',
+  cloudShade: '#8f5866',
+  cloudEdge: '#d38f84',
   moon: '#ffe8cc',
   halo: '#ffb18f',
   river: '#281720',
@@ -184,6 +200,29 @@ interface Star {
   size: number;
 }
 
+// A cloud is a cell mask (0 empty, 1 body, 2 rim, 3 underside) that drifts
+// left to right along its own clear corridor of sky (home x ± range), forming
+// out of dither at one end and dissolving back into it at the other. Where the
+// sky is too tight for a corridor it just sways in place. On the way to night it
+// slides off toward its own edge of the sky, so the clouds part like curtains
+// and the stars come through; at dawn they roll back in.
+interface CloudShape {
+  w: number;
+  h: number;
+  mask: Uint8Array;
+}
+
+interface Cloud extends CloudShape {
+  x: number;
+  y: number;
+  /** cells of clear sky reserved either side of home x */
+  range: number;
+  /** cells per second */
+  speed: number;
+  phase: number;
+  delay: number;
+}
+
 interface Perch {
   x: number;
   y: number;
@@ -232,6 +271,11 @@ interface Scene {
   near: Bldg[];
   windows: Win[];
   stars: Star[];
+  clouds: Cloud[];
+  cloudShapes: { big: CloudShape[]; small: CloudShape[]; tiny: CloudShape[] };
+  cloudSeed: number;
+  /** per column: the highest skyline row (spires, masts, tanks included) */
+  colTop: Int16Array;
   perches: Perch[];
   birds: Bird[];
   birdsAway: boolean;
@@ -245,6 +289,8 @@ interface Scene {
   skyFromDark: boolean;
   skyToDark: boolean;
   skyT: number;
+  /** 0 = clouds home (day), 1 = parted off-screen (night); eased per cloud */
+  cloudP: number;
   flickerAt: number;
   cursor: number;
   clockH: number;
@@ -447,6 +493,59 @@ function buildScene(w: number, h: number): Scene {
     size: rand() < 0.14 ? 3 : 2,
   }));
 
+  // the skyline's outline, column by column (spire tips, antennas, tanks and
+  // the clock tower's mast included) — clouds are only placed above it
+  const colTop = new Int16Array(cols).fill(groundY);
+  const raise = (x0: number, x1: number, top: number) => {
+    for (let cx = Math.max(0, x0); cx <= Math.min(cols - 1, x1); cx++) colTop[cx] = Math.min(colTop[cx], top);
+  };
+  for (const b of [...far, ...mid, ...near]) {
+    const extra = Math.max(b.roof === 'step' ? 4 : 0, b.roof === 'spire' ? 7 : 0, b.antenna, b.tank ? 6 : 0);
+    raise(b.x, b.x + b.w - 1, b.y - extra);
+  }
+  raise(towerX - 1, towerX + towerW, towerTop - 6);
+  raise(towerX + 4, towerX + 4, towerTop - 16);
+  raise(domeX, domeX + domeW - 1, domeBaseY - domeR - 2);
+
+  // puffs are circles sat on a shared flat baseline: one tall middle puff,
+  // shoulders either side, sometimes a small tail — a plain cumulus silhouette
+  const makeCloud = (W: number): CloudShape => {
+    const H = Math.max(4, Math.round(W * (0.3 + rand() * 0.08)));
+    const puffs: { cx: number; r: number }[] = [
+      { cx: W * (0.46 + rand() * 0.1), r: H * (0.9 + rand() * 0.1) },
+      { cx: W * (0.24 + rand() * 0.06), r: H * (0.58 + rand() * 0.14) },
+      { cx: W * (0.72 + rand() * 0.06), r: H * (0.62 + rand() * 0.14) },
+    ];
+    if (rand() < 0.6) puffs.push({ cx: W * 0.08, r: H * (0.32 + rand() * 0.1) });
+    if (rand() < 0.6) puffs.push({ cx: W * 0.92, r: H * (0.34 + rand() * 0.1) });
+    const left = Math.floor(Math.min(...puffs.map((q) => q.cx - q.r)));
+    const right = Math.ceil(Math.max(...puffs.map((q) => q.cx + q.r)));
+    const cw = right - left + 1;
+    const ch = H + 1;
+    const inside = (cx: number, cy: number) => {
+      if (cx < 0 || cy < 0 || cx >= cw || cy >= ch) return false;
+      const gx = cx + left + 0.5;
+      const gy = cy + 0.5;
+      return puffs.some((q) => (gx - q.cx) ** 2 + (gy - ch) ** 2 <= q.r * q.r);
+    };
+    const mask = new Uint8Array(cw * ch);
+    for (let cy = 0; cy < ch; cy++) {
+      for (let cx = 0; cx < cw; cx++) {
+        if (!inside(cx, cy)) continue;
+        const rim = !inside(cx - 1, cy) || !inside(cx + 1, cy) || !inside(cx, cy - 1);
+        mask[cy * cw + cx] = rim ? 2 : cy >= ch - 2 ? 3 : 1;
+      }
+    }
+    return { w: cw, h: ch, mask };
+  };
+
+  const phone = w < 480;
+  const cloudShapes = {
+    big: Array.from({ length: 4 }, () => makeCloud(phone ? ri(18, 23) : ri(20, 28))),
+    small: Array.from({ length: 4 }, () => makeCloud(phone ? ri(12, 15) : ri(12, 17))),
+    tiny: Array.from({ length: 3 }, () => makeCloud(phone ? ri(9, 11) : ri(9, 11))),
+  };
+
   const moon = {
     x: Math.round(cols * (w < 480 ? 0.745 : 0.815)),
     y: Math.round(rows * 0.145),
@@ -466,6 +565,10 @@ function buildScene(w: number, h: number): Scene {
     near,
     windows,
     stars,
+    clouds: [],
+    cloudShapes,
+    cloudSeed: cols,
+    colTop,
     perches,
     birds: [],
     birdsAway: false,
@@ -479,6 +582,7 @@ function buildScene(w: number, h: number): Scene {
     skyFromDark: false,
     skyToDark: false,
     skyT: 1,
+    cloudP: 0,
     flickerAt: 0.4,
     cursor: 0,
     clockH: clock.h,
@@ -487,10 +591,105 @@ function buildScene(w: number, h: number): Scene {
   };
 }
 
+// Compose the sky: each cloud gets a home in open air. A candidate spot must
+// clear the nav, the name + tagline box, the sun's halo, the skyline outline
+// (with room for perched birds) and every cloud already placed, all widened by
+// how far the cloud sways. Among the spots that fit, the one farthest from
+// everything already in the sky wins, so clouds spread out instead of bunching.
+// At least two clouds always land; if the sky is tight, smaller shapes are tried.
+function layoutClouds(s: Scene, text: { x0: number; y0: number; x1: number; y1: number } | null) {
+  const { cols, cell } = s;
+  const navBottom = Math.ceil(84 / cell);
+  const r = s.moon.r;
+  const my = Math.max(s.moon.y, Math.ceil(88 / cell) + r);
+  const sun = { x0: s.moon.x - r - 7, y0: my - r - 7, x1: s.moon.x + r + 7, y1: my + r + 7 };
+  const tx = text && { x0: text.x0 - 4, y0: text.y0 - 3, x1: text.x1 + 4, y1: text.y1 + 3 };
+  const rand = mulberry32(0x9e3779b9 ^ s.cloudSeed);
+  const placed: Cloud[] = [];
+  const hit = (a: { x0: number; y0: number; x1: number; y1: number }, x0: number, y0: number, x1: number, y1: number) =>
+    x0 <= a.x1 && x1 >= a.x0 && y0 <= a.y1 && y1 >= a.y0;
+  const target = cols < 130 ? 3 : cols < 260 ? 4 : 5;
+  const anchors = [
+    { x: (sun.x0 + sun.x1) / 2, y: (sun.y0 + sun.y1) / 2 },
+    ...(tx ? [{ x: (tx.x0 + tx.x1) / 2, y: (tx.y0 + tx.y1) / 2 }] : []),
+  ];
+
+  const tryPlace = (shape: CloudShape, sway: number) => {
+    let best: { x: number; y: number; score: number } | null = null;
+    // a cloud may hang a little past the screen edge, as real ones do
+    const minX = -Math.floor(shape.w * 0.2);
+    const maxX = cols - Math.ceil(shape.w * 0.8);
+    for (let y = navBottom; y + shape.h < s.groundY; y += 1) {
+      for (let x = minX; x <= maxX; x += 2) {
+        const x0 = x - sway;
+        const x1 = x + shape.w + sway;
+        const y1 = y + shape.h;
+        if (tx && hit(tx, x0, y, x1, y1)) continue;
+        if (hit(sun, x0, y, x1, y1)) continue;
+        let clear = true;
+        for (let cx = Math.max(0, x0); cx < Math.min(cols, x1); cx++) {
+          if (y1 + 5 > s.colTop[cx]) {
+            clear = false;
+            break;
+          }
+        }
+        if (!clear) continue;
+        for (const c of placed) {
+          if (hit({ x0: c.x - c.range - 3, y0: c.y - 2, x1: c.x + c.w + c.range + 3, y1: c.y + c.h + 2 }, x0, y, x1, y1)) {
+            clear = false;
+            break;
+          }
+        }
+        if (!clear) continue;
+        const cx = x + shape.w / 2;
+        const cy = y + shape.h / 2;
+        let d = Infinity;
+        for (const a of anchors) d = Math.min(d, Math.hypot(cx - a.x, (cy - a.y) * 1.6));
+        for (const c of placed) d = Math.min(d, Math.hypot(cx - (c.x + c.w / 2), (cy - (c.y + c.h / 2)) * 1.6));
+        // a touch of seeded jitter keeps ties from always resolving the same way
+        const score = Math.min(d, cols * 0.45) + rand() * 2;
+        if (!best || score > best.score) best = { x, y, score };
+      }
+    }
+    if (!best) return false;
+    // ~5-8 css px a second: slow enough to feel like weather, not traffic.
+    // bigger clouds read as nearer, so they move a touch faster (parallax)
+    const pxPerSec = (shape.w >= 18 ? 7 : 5) * (0.9 + rand() * 0.2);
+    placed.push({
+      ...shape,
+      x: best.x,
+      y: best.y,
+      range: sway,
+      speed: pxPerSec / cell,
+      phase: rand(),
+      delay: rand() * 0.3,
+    });
+    return true;
+  };
+  // the widest corridor that fits wins; tight skies fall back to a short one
+  const ranges = [Math.max(10, Math.round(cols * 0.16)), Math.max(7, Math.round(cols * 0.09)), 5, 2];
+  const placeShape = (shape: CloudShape) => ranges.some((rg) => tryPlace(shape, rg));
+
+  const { big, small, tiny } = s.cloudShapes;
+  let bi = 0;
+  let si = 0;
+  for (let i = 0; i < target; i++) {
+    // alternate big and small, falling back to smaller shapes when space is tight
+    const order = i % 2 === 0 ? [big[bi++ % big.length], small[si % small.length], tiny[i % tiny.length]]
+      : [small[si++ % small.length], tiny[i % tiny.length]];
+    for (const shape of order) if (placeShape(shape)) break;
+  }
+  // a sky with a single cloud looks like a mistake; insist on two
+  for (let k = 0; placed.length < 2 && k < tiny.length; k++) placeShape(tiny[k]);
+  s.clouds = placed;
+}
+
 export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
-  { isDark, paused, onBirdsChange },
+  { isDark, paused, onBirdsChange, avoidRef },
   ref,
 ) {
+  const avoidElRef = useRef(avoidRef);
+  avoidElRef.current = avoidRef;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const darkRef = useRef(isDark);
   const pausedRef = useRef(paused);
@@ -557,7 +756,13 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       if (x + pw < 0 || y + phh < 0 || x > s.cols || y > s.rows) return;
       ctx.globalAlpha = alpha;
       ctx.fillStyle = color;
-      ctx.fillRect(Math.round(x * s.cell), Math.round(y * s.cell), Math.ceil(pw * s.cell), Math.ceil(phh * s.cell));
+      // Snap to device pixels, not css pixels, so slow movers glide on retina screens.
+      // Both edges are snapped, so neighbouring cells share an edge exactly: snapping only
+      // the start left hairline gaps and overlaps at 125%/150% scaling and browser zoom.
+      const k = s.cell * dpr;
+      const x0 = Math.round(x * k) / dpr;
+      const y0 = Math.round(y * k) / dpr;
+      ctx.fillRect(x0, y0, Math.round((x + pw) * k) / dpr - x0, Math.round((y + phh) * k) / dpr - y0);
     };
 
     const dot = (x: number, y: number, size: number, color: string, alpha = 1) => {
@@ -725,6 +930,53 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
           eased,
           toP,
         );
+      }
+
+      // clouds — in front of the sun (it slips behind them), behind the skyline
+      for (const c of s.clouds) {
+        // parting runs on its own slower timeline than the sky, staggered per cloud
+        const k = easeInOut(Math.max(0, Math.min(1, (s.cloudP - c.delay) / 0.7)));
+        if (k >= 1) continue;
+        let base: number;
+        let vis = 1;
+        if (c.range >= 5) {
+          // drift across the corridor, forming at the start and dissolving at the end
+          const cycle = (2 * c.range) / c.speed;
+          const prog = (t / cycle + c.phase) % 1;
+          base = c.x - c.range + prog * 2 * c.range;
+          // ~3.5s to form and to dissolve, whatever the corridor length
+          const fade = Math.min(0.3, 3.5 / cycle);
+          // a paused sky (or reduced motion) never freezes a cloud half-formed
+          vis = pausedRef.current ? 1 : Math.min(1, prog / fade, (1 - prog) / fade);
+        } else {
+          base = c.x + Math.sin(t * 0.35 + c.phase * 6.28) * c.range;
+        }
+        const side = c.x + c.w / 2 < s.cols / 2 ? -1 : 1;
+        // each cloud only travels as far as its own edge of the sky, so near-edge
+        // and centre clouds part at a similar, unhurried pace
+        const toEdge = side < 0 ? base + c.w + 2 : s.cols - base + 2;
+        const cx0 = base + side * k * toEdge;
+        if (cx0 + c.w < 0 || cx0 > s.cols) continue;
+        const a = 1 - k * 0.55;
+        for (let cy = 0; cy < c.h; cy++) {
+          for (let cxi = 0; cxi < c.w; cxi++) {
+            const m = c.mask[cy * c.w + cxi];
+            if (!m) continue;
+            // forming / dissolving: an ordered-dither reveal, so it stays 1-bit
+            if (vis < 1 && bayerAt(cxi + 3, cy + 5) >= vis) continue;
+            const gx = cx0 + cxi;
+            const gy = c.y + cy;
+            // dither in cloud-local cells so the pattern travels with the cloud
+            if (m === 2) {
+              // a lightly dithered rim reads as a soft edge, not an outline
+              pixel(gx, gy, 1, 1, bayerAt(cxi, cy) < 0.32 ? p.cloudEdge : p.cloud, a);
+            } else if (m === 3) {
+              pixel(gx, gy, 1, 1, bayerAt(cxi, cy) < (cy === c.h - 1 ? 0.55 : 0.2) ? p.cloudShade : p.cloud, a);
+            } else {
+              pixel(gx, gy, 1, 1, p.cloud, a);
+            }
+          }
+        }
       }
 
       if (s.shooting.active) {
@@ -930,6 +1182,7 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
         if (old?.perch) old.perch.taken = false;
       }
       if (!isPaused) burst(from.x, from.y, user ? 6 : 0);
+      if (user) emitSound('chirp');
       cbRef.current.onBirdsChange?.(s.birds.length);
       if (pausedRef.current) draw();
     };
@@ -969,6 +1222,11 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       if (!s) return;
       s.time += dt;
       if (s.skyT < 1) s.skyT = Math.min(1, s.skyT + dt / 1.25);
+      const cloudTarget = s.skyToDark ? 1 : 0;
+      if (s.cloudP !== cloudTarget) {
+        const stepP = dt / 2.4;
+        s.cloudP = cloudTarget > s.cloudP ? Math.min(1, s.cloudP + stepP) : Math.max(0, s.cloudP - stepP);
+      }
 
       const minuteKey = Math.floor(Date.now() / 60000);
       if (minuteKey !== s.clockKey) {
@@ -1152,6 +1410,24 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       start();
     };
 
+    const relayoutClouds = () => {
+      const s = scene;
+      if (!s) return;
+      const el = avoidElRef.current?.current;
+      const crect = canvas.getBoundingClientRect();
+      let text = null;
+      if (el && crect.height) {
+        const r = el.getBoundingClientRect();
+        text = {
+          x0: Math.floor((r.left - crect.left) / s.cell),
+          y0: Math.floor((r.top - crect.top) / s.cell),
+          x1: Math.ceil((r.right - crect.left) / s.cell),
+          y1: Math.ceil((r.bottom - crect.top) / s.cell),
+        };
+      }
+      layoutClouds(s, text);
+    };
+
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       const nw = Math.max(1, Math.round(rect.width));
@@ -1170,7 +1446,9 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       scene.skyFromDark = darkRef.current;
       scene.skyToDark = darkRef.current;
       scene.skyT = 1;
+      scene.cloudP = darkRef.current ? 1 : 0;
       seed(prev);
+      relayoutClouds();
       // a fresh scene starts with the flock perched; match it to where the page is
       syncScrollRef.current(true);
       draw();
@@ -1185,6 +1463,7 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       s.skyFromDark = s.skyToDark;
       s.skyToDark = target;
       s.skyT = pausedRef.current ? 1 : 0;
+      if (pausedRef.current) s.cloudP = target ? 1 : 0;
       if (!pausedRef.current) start();
     };
 
@@ -1250,6 +1529,23 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
     });
     ro.observe(canvas);
 
+    // The text block settles after web fonts load; re-lane the clouds around it. Debounced
+    // like the canvas: the name is sized in vw, so a window drag fires this every frame,
+    // and each layout is a full search of the sky. While a rebuild is pending, it will
+    // lay the clouds out itself.
+    const avoidEl = avoidElRef.current?.current;
+    let avoidTimer = 0;
+    const avoidRo = new ResizeObserver(() => {
+      if (disposed || !scene) return;
+      clearTimeout(avoidTimer);
+      avoidTimer = window.setTimeout(() => {
+        if (disposed || !scene) return;
+        relayoutClouds();
+        if (!running) draw();
+      }, 160);
+    });
+    if (avoidEl) avoidRo.observe(avoidEl);
+
     // moving to a screen with a different pixel density changes no box size, so
     // the ResizeObserver never fires; listen for the density itself
     let dprQuery: MediaQueryList | null = null;
@@ -1283,10 +1579,12 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       disposed = true;
       offReady();
       clearTimeout(resizeTimer);
+      clearTimeout(avoidTimer);
       dprQuery?.removeEventListener('change', onDpr);
       stop();
       io.disconnect();
       ro.disconnect();
+      avoidRo.disconnect();
       canvas.removeEventListener('click', onClick);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('scroll', onScroll);

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { prefersReducedMotion } from '../lib/dither';
 
 // Same gate as the `cursor: none` rule in index.css, so the two never disagree.
 // A touchscreen laptop with a mouse still gets the custom cursor.
@@ -34,11 +35,13 @@ export default function CustomCursor() {
     const s = { mouseX: -100, mouseY: -100, ringX: -100, ringY: -100, scale: 1, hovering: false, clicking: false, shown: false, label: '', lastLabel: '' };
     let frameId = 0;
     let running = false;
+    // reduced motion: the ring sits on the pointer instead of trailing behind it
+    const follow = prefersReducedMotion() ? 1 : 0.15;
 
     const frame = () => {
       dot.style.transform = `translate(${s.mouseX - 3}px, ${s.mouseY - 3}px)`;
-      s.ringX += (s.mouseX - s.ringX) * 0.15;
-      s.ringY += (s.mouseY - s.ringY) * 0.15;
+      s.ringX += (s.mouseX - s.ringX) * follow;
+      s.ringY += (s.mouseY - s.ringY) * follow;
       // the ring stays a 32px box and grows/shrinks by transform only, eased here rather
       // than by a CSS transition (which would fight the per-frame translate)
       const target = (s.clicking ? 20 : s.hovering ? 48 : 32) / RING;
@@ -76,7 +79,13 @@ export default function CustomCursor() {
       setVisible(v);
     };
 
-    const handleMove = (e: MouseEvent) => {
+    // pointer events, not mouse events: a tap on a touchscreen laptop fires a compatibility
+    // mousemove that would park the cursor wherever the finger landed
+    const handleMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') {
+        show(false);
+        return;
+      }
       s.mouseX = e.clientX;
       s.mouseY = e.clientY;
       const target = e.target as HTMLElement;
@@ -85,20 +94,24 @@ export default function CustomCursor() {
       show(true);
       wake();
     };
-    const handleDown = () => { s.clicking = true; wake(); };
+    const handleDown = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') return show(false);
+      s.clicking = true;
+      wake();
+    };
     const handleUp = () => { s.clicking = false; wake(); };
     const handleLeave = () => show(false);
 
-    window.addEventListener('mousemove', handleMove, { passive: true });
-    window.addEventListener('mousedown', handleDown);
-    window.addEventListener('mouseup', handleUp);
+    window.addEventListener('pointermove', handleMove, { passive: true });
+    window.addEventListener('pointerdown', handleDown);
+    window.addEventListener('pointerup', handleUp);
     document.documentElement.addEventListener('mouseleave', handleLeave);
 
     return () => {
       document.documentElement.classList.remove('custom-cursor-active');
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('mousedown', handleDown);
-      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerdown', handleDown);
+      window.removeEventListener('pointerup', handleUp);
       document.documentElement.removeEventListener('mouseleave', handleLeave);
       cancelAnimationFrame(frameId);
     };

@@ -27,8 +27,11 @@ export default function CategoryFilter({ active, onChange, counts }: CategoryFil
         return (
           <button
             key={cat.id}
+            type="button"
             onClick={() => onChange(cat.id)}
             aria-pressed={isActive}
+            // choosing one of a set, not switching something on/off
+            data-sound="pick"
             className={`flex items-center gap-2 px-3.5 py-2 pointer-coarse:py-3 rounded-full font-mono text-[11px] tracking-wider whitespace-nowrap transition-[color,background-color,border-color,scale] duration-150 ease-out active:scale-[0.97] ${
               isActive
                 ? 'bg-[var(--text-primary)] text-[var(--bg-primary)]'

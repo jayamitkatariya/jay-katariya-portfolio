@@ -5,6 +5,7 @@ interface ShortcutActions {
   toggleHelp: () => void;
   toggleAgent?: () => void;
   toggleAchievements?: () => void;
+  toggleSound?: () => void;
   closeOverlays: () => void;
   onShortcutUsed?: () => void;
 }
@@ -49,7 +50,13 @@ export function useKeyboardShortcuts(actions: ShortcutActions, enabled = true) {
         break;
       // shift+a, not a bare a: one stray keypress shouldn't swap the whole site out
       case 'A':
+        // Caps Lock also produces 'A'; only a held shift counts
+        if (!e.shiftKey) break;
         actions.toggleAgent?.();
+        actions.onShortcutUsed?.();
+        break;
+      case 'm':
+        actions.toggleSound?.();
         actions.onShortcutUsed?.();
         break;
       case 'x':

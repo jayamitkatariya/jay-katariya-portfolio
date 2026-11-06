@@ -26,12 +26,19 @@ export default function PixelWipe() {
     // compare paths rather than a first-run flag, so StrictMode's double effect doesn't wipe on load
     if (prevPath.current === pathname) return;
     // writing index <-> article is handled by the paper tear, not the pixel wipe
+    // Every early exit also drops the wipe: a navigation that lands mid-wipe has just
+    // cancelled the timers that would have revealed the page, and left alone the
+    // cover would sit over it until the next click.
     if (prevPath.current.startsWith('/writing') && pathname.startsWith('/writing')) {
       prevPath.current = pathname;
+      setPhase('idle');
       return;
     }
     prevPath.current = pathname;
-    if (instant || prefersReducedMotion()) return;
+    if (instant || prefersReducedMotion()) {
+      setPhase('idle');
+      return;
+    }
     setRun(r => r + 1);
     setPhase('cover');
     const t1 = setTimeout(() => setPhase('reveal'), COVER_MS + HOLD_MS);

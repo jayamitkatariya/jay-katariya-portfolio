@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowUpRight, Plus } from 'lucide-react';
@@ -45,11 +45,15 @@ export default function ProjectList({ projects, activeCategory, onChange, counts
   const reduceMotion = useReducedMotion();
   const { hash } = useLocation();
 
-  // links like /portfolio#workro-recruit land with that project already open
+  // links like /portfolio#workro-recruit land with that project already open. Keyed on
+  // the hash alone: `projects` is a new array on every filter change, and re-running
+  // then would re-open a project the reader had just collapsed.
+  const projectsRef = useRef(projects);
+  projectsRef.current = projects;
   useEffect(() => {
     const id = safeDecode(hash.replace(/^#/, ''));
-    if (id && projects.some((p) => slug(p.name) === id)) setOpen(id);
-  }, [hash, projects]);
+    if (id && projectsRef.current.some((p) => slug(p.name) === id)) setOpen(id);
+  }, [hash]);
 
   // a filter change can remove the open project
   useEffect(() => {

@@ -32,7 +32,6 @@ export default function Filmstrip() {
     drag.current = { down: true, startX: e.clientX, left: el.scrollLeft, moved: false };
     // mandatory snapping fights a mouse drag frame by frame; let it snap once on release
     el.style.scrollSnapType = 'none';
-    el.setPointerCapture(e.pointerId);
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -40,7 +39,12 @@ export default function Filmstrip() {
     const el = strip.current;
     if (!el) return;
     const dx = e.clientX - drag.current.startX;
-    if (Math.abs(dx) > 3) drag.current.moved = true;
+    if (!drag.current.moved && Math.abs(dx) > 3) {
+      drag.current.moved = true;
+      // capture only once it is really a drag: captured, a plain click would be retargeted
+      // to the strip and never reach the print
+      el.setPointerCapture(e.pointerId);
+    }
     el.scrollLeft = drag.current.left - dx;
   };
 
@@ -78,6 +82,8 @@ export default function Filmstrip() {
           tabIndex={0}
           data-cursor-hover
           data-cursor-label="drag"
+          // a press here may become a drag; prints sound on the click, not the touch-down
+          data-sound-on="click"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}

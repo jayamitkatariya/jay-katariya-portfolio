@@ -11,7 +11,7 @@ export default function AgentModeToggle({ isAgent, onToggle, className = '' }: A
       onClick={onToggle}
       aria-pressed={isAgent}
       title="a plain, machine-readable version of this site for ai agents"
-      className={`font-mono text-[9px] sm:text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] tracking-widest transition-colors pointer-coarse:py-3 pointer-coarse:-my-3 ${className}`}
+      className={`font-mono text-[9px] sm:text-[10px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] tracking-widest transition-colors pointer-coarse:py-[17px] pointer-coarse:-my-[17px] ${className}`}
     >
       [ agent mode: {isAgent ? 'on' : 'off'} ]
     </button>

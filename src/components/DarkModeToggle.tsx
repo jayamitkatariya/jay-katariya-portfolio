@@ -3,6 +3,9 @@ import { flushSync } from 'react-dom';
 import { PixelIcon } from './SectionHeading';
 import { prefersReducedMotion } from '../lib/dither';
 
+// only the most recent transition may switch colour transitions back on
+let switchToken = 0;
+
 interface DarkModeToggleProps {
   isDark: boolean;
   onToggle: () => void;
@@ -30,6 +33,7 @@ export default function DarkModeToggle({ isDark, onToggle }: DarkModeToggleProps
     // colour transitions off while the wipe runs, so it uncovers the finished theme
     const root = document.documentElement;
     root.classList.add('theme-switching');
+    const token = ++switchToken;
     // flushSync so the new theme is committed before the "after" snapshot is taken
     const transition = (document as any).startViewTransition(() => {
       flushSync(onToggle);
@@ -37,7 +41,9 @@ export default function DarkModeToggle({ isDark, onToggle }: DarkModeToggleProps
     // clicking again mid-animation skips the running transition, which rejects `ready`;
     // the theme still changed, so there's nothing to handle
     transition.ready?.catch(() => {});
-    const done = () => root.classList.remove('theme-switching');
+    const done = () => {
+      if (token === switchToken) root.classList.remove('theme-switching');
+    };
     (transition.finished ?? Promise.resolve()).then(done, done);
   };
 
@@ -46,6 +52,8 @@ export default function DarkModeToggle({ isDark, onToggle }: DarkModeToggleProps
     <button
       ref={buttonRef}
       onClick={handleToggle}
+      type="button"
+      data-sound="notify"
       className="relative grid h-9 w-9 place-items-center rounded-full pointer-coarse:h-11 pointer-coarse:w-11 hover:bg-[var(--bg-secondary)] transition-[color,background-color,scale] duration-150 ease-out active:scale-[0.96] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] pointer-coarse:after:absolute pointer-coarse:after:-inset-1.5 pointer-coarse:after:content-['']"
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >

@@ -66,8 +66,24 @@
       })();
     </script>
 
-    <!-- The loader's badge photo: there by the time the card lands -->
-    <link rel="preload" as="image" href="/idpic.jpg" fetchpriority="high" />
+    <!-- The loader's badge photo: there by the time the card lands. Only when the intro
+         will actually play (once per session, never in agent mode); otherwise it's a wasted
+         high-priority fetch and an "unused preload" warning. -->
+    <script>
+      (function () {
+        try {
+          if (sessionStorage.getItem('intro-seen') === '1') return;
+          var agent = new URLSearchParams(location.search).get('agent');
+          if (agent === '1' || (agent !== '0' && localStorage.getItem('agent-mode') === '1')) return;
+        } catch (e) {}
+        var l = document.createElement('link');
+        l.rel = 'preload';
+        l.as = 'image';
+        l.href = '/idpic.jpg';
+        l.setAttribute('fetchpriority', 'high');
+        document.head.appendChild(l);
+      })();
+    </script>
 
     <!-- Preconnect for Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

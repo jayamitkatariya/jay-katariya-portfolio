@@ -40,7 +40,7 @@ export default class ErrorBoundary extends Component<Props, State> {
         <p className="font-mono text-xs tracking-widest text-[var(--text-tertiary)]">something broke</p>
         <button
           onClick={() => window.location.reload()}
-          className="font-mono text-xs tracking-widest border border-[var(--border-primary)] rounded-full px-5 py-2.5 hover:border-[var(--text-primary)] transition-[color,background-color,border-color,scale] duration-150 ease-out active:scale-[0.97]"
+          className="font-mono text-xs tracking-widest border border-[var(--border-primary)] rounded-full px-5 py-2.5 min-h-11 hover:border-[var(--text-primary)] transition-[color,background-color,border-color,scale] duration-150 ease-out active:scale-[0.97]"
         >
           reload the page
         </button>

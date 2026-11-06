@@ -51,6 +51,7 @@ export default function HeroCity({ isDark }: { isDark: boolean }) {
   const [paused, setPaused] = useState(() => prefersReducedMotion());
   const [birds, setBirds] = useState(3);
   const cityRef = useRef<CityHandle>(null);
+  const textRef = useRef<HTMLDivElement>(null);
   const status = useLiveStatus();
 
   return (
@@ -60,10 +61,12 @@ export default function HeroCity({ isDark }: { isDark: boolean }) {
         isDark={isDark}
         paused={paused}
         onBirdsChange={setBirds}
+        avoidRef={textRef}
       />
 
       <div className="pointer-events-none relative z-10 flex min-h-[100svh] flex-col">
         <div className="flex flex-1 flex-col items-center justify-center px-5 pb-[23vh] pt-[10vh] text-center short:pb-[15vh] short:pt-[4vh]">
+          <div ref={textRef} className="flex flex-col items-center">
           <h1 className="font-display font-bold leading-[0.9] tracking-normal text-[clamp(3rem,10.5vw,11rem)] text-[var(--text-primary)] short:text-5xl">
             jay katariya
           </h1>
@@ -73,6 +76,7 @@ export default function HeroCity({ isDark }: { isDark: boolean }) {
           <p className="mt-3 font-mono text-[9px] tracking-[0.18em] text-[var(--text-tertiary)] sm:mt-4 sm:text-[10px] short:mt-2">
             building workro · purdue ibe &rsquo;28
           </p>
+          </div>
         </div>
 
         <div className="relative z-20 flex flex-wrap items-end justify-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:justify-between sm:px-6 sm:pb-5">
@@ -92,6 +96,7 @@ export default function HeroCity({ isDark }: { isDark: boolean }) {
             className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-[var(--border-primary)]/80 bg-[var(--bg-primary)]/70 text-[var(--text-secondary)] backdrop-blur-sm transition-[color,scale] duration-150 ease-out active:scale-[0.96] sm:hidden"
             aria-label={paused ? 'animate the city' : 'pause the city'}
             aria-pressed={paused}
+            data-sound={paused ? 'toggleOn' : 'toggleOff'}
           >
             {paused ? <Play size={10} strokeWidth={1.8} /> : <Pause size={10} strokeWidth={1.8} />}
           </button>
@@ -102,6 +107,8 @@ export default function HeroCity({ isDark }: { isDark: boolean }) {
               onClick={() => cityRef.current?.sendBird()}
               className="relative after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] grid min-h-8 w-8 place-items-center rounded-full transition-[color,background-color,scale] duration-150 ease-out active:scale-[0.96] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] pointer-coarse:min-h-11 pointer-coarse:w-11"
               aria-label="send a bird"
+              // the chirp comes from the canvas, and only if a bird actually found a perch
+              data-sound="none"
               title="send a bird"
             >
               <Bird size={13} strokeWidth={1.6} className="text-[var(--accent)]" />
@@ -112,6 +119,7 @@ export default function HeroCity({ isDark }: { isDark: boolean }) {
               className="relative after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] flex min-h-8 items-center gap-1.5 rounded-full px-2.5 py-1.5 transition-[color,background-color,scale] duration-150 ease-out active:scale-[0.96] hover:text-[var(--text-primary)] pointer-coarse:min-h-11"
               aria-label={paused ? 'animate the city' : 'pause the city'}
               aria-pressed={paused}
+              data-sound={paused ? 'toggleOn' : 'toggleOff'}
             >
               {paused ? <Play size={10} strokeWidth={1.8} /> : <Pause size={10} strokeWidth={1.8} />}
               <span>{paused ? 'animate' : 'pause'}</span>

@@ -10,6 +10,7 @@ const SHORTCUTS = [
   { key: '5', description: 'go to resume' },
   { key: '← →', description: 'browse photos (in a memory)' },
   { key: 'shift a', description: 'agent mode' },
+  { key: 'm', description: 'sound on / off' },
   { key: 'x', description: 'achievements' },
   { key: '?', description: 'show shortcuts' },
   { key: 'esc', description: 'close overlays' },
@@ -30,6 +31,7 @@ export default function KeyboardShortcuts({ isOpen, onClose }: { isOpen: boolean
             transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black/10 backdrop-blur-[3px] z-[80]"
             onClick={onClose}
+            data-sound="close"
           />
           <motion.div
             role="dialog"
@@ -49,7 +51,8 @@ export default function KeyboardShortcuts({ isOpen, onClose }: { isOpen: boolean
                   ref={closeRef}
                   onClick={onClose}
                   aria-label="close"
-                  className="-mr-2.5 w-10 h-10 grid place-items-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-[color,background-color,border-color,scale] duration-150 ease-out active:scale-[0.96] rounded-full hover:bg-[var(--bg-secondary)]"
+                  data-sound="close"
+                  className="-mr-2.5 w-10 h-10 pointer-coarse:w-11 pointer-coarse:h-11 grid place-items-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-[color,background-color,border-color,scale] duration-150 ease-out active:scale-[0.96] rounded-full hover:bg-[var(--bg-secondary)]"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

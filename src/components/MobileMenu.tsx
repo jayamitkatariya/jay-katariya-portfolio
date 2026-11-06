@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
+import { PixelIcon } from './SectionHeading';
+import { toggleSoundMuted, useSoundMuted } from '../lib/sound/store';
 
 export const PAGES = [
   ['home', '/'],
@@ -27,18 +29,23 @@ export default function MobileMenu({
   returnFocusTo: React.RefObject<HTMLButtonElement | null>;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const muted = useSoundMuted();
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
+  // keyed on isOpen alone: re-running on every parent render would pull focus back
+  // to the first link while someone is tabbing through the sheet
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onCloseRef.current();
     };
     window.addEventListener('keydown', onKey);
     // move focus into the sheet without scrolling the page behind it
     const first = panelRef.current?.querySelector<HTMLElement>('a');
     first?.focus({ preventScroll: true });
     return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   // only hand focus back if the sheet was actually open — this effect also runs on
   // mount, and focusing then would put a focus ring on the toggle before anyone taps it
@@ -91,6 +98,20 @@ export default function MobileMenu({
                 );
               })}
             </nav>
+            {/* the nav bar has no room for a sound switch on phones; it lives here */}
+            <button
+              type="button"
+              onClick={toggleSoundMuted}
+              aria-pressed={!muted}
+              data-sound={muted ? 'none' : 'toggleOff'}
+              className="flex min-h-14 w-full items-center justify-between border-t border-[var(--border-primary)] px-[calc(var(--nav-px)+env(safe-area-inset-left))] py-4 font-mono text-[11px] tracking-widest text-[var(--text-tertiary)] transition-colors active:text-[var(--text-primary)]"
+            >
+              <span className="flex items-center gap-3">
+                <PixelIcon name={muted ? 'mute' : 'sound'} size={12} instant />
+                sound
+              </span>
+              <span className={muted ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)]'}>{muted ? 'off' : 'on'}</span>
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

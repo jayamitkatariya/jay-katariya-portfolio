@@ -19,6 +19,13 @@ export const selectedWork: WorkRow[] = [
 // One texture line; the full list is on /resume#recognition.
 export const awardsText = 'moss + apify @ calhacks · morgan $1k · venturex2 $5k';
 
+// The same three, split for phones: a tiny two-line ledger instead of one long run.
+export const awardsShort = [
+  { name: 'moss + apify', where: 'calhacks' },
+  { name: 'morgan', where: '$1k prize' },
+  { name: 'venturex2', where: '$5k' },
+];
+
 // A curated contact sheet from the 68-photo roll: friends, travel, home,
 // childhood, the lab, the water, the win. Order is about rhythm, not chronology.
 // ar = width / height, so every print keeps its true orientation.
