@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { bayerAt, loadImage, resolveColor, sampleLuma, prefersReducedMotion } from '../lib/dither';
+import { bayerAt, loadImage, resolveColor, sampleLuma } from '../lib/dither';
 import { CURSOR_W, FONT_ROWS, layoutPixelText, type PixelText } from '../lib/pixelFont';
 
 // Ordered-dither duotone render of a photo. The image "develops" as it enters
@@ -48,7 +48,6 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
     const bctx = buf.getContext('2d');
     // null when iOS's canvas memory is spent: skip the band rather than throw from the effect
     if (!ctx || !bctx) return;
-    const reduced = prefersReducedMotion();
     let cancelled = false;
     let raf = 0;
     let blinkTimer = 0;
@@ -57,12 +56,12 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
     let w = 0;
     let h = 0;
     let cell = 1; // device pixels per dither cell, always an integer so dots stay even
-    let reveal = reduced ? 1 : 0;
-    let typed = reduced ? Infinity : 0;
-    let cursorShown = reduced; // the cursor's slot is cut out of the photo
-    let cursorOn = reduced; // …and blinks its fill inside that slot, so the knockout never flickers
+    let reveal = 0;
+    let typed = 0;
+    let cursorShown = false; // the cursor's slot is cut out of the photo
+    let cursorOn = false; // …and blinks its fill inside that slot, so the knockout never flickers
     let typeEndAt = 0;
-    let started = reduced;
+    let started = false;
     const ink = resolveColor(canvas, color);
 
     const word: PixelText | null = text ? layoutPixelText(text) : null;
@@ -142,7 +141,7 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
 
     const blink = () => {
       clearTimeout(blinkTimer);
-      if (!word || reduced || !visible || document.hidden || typed < word.charStarts.length - 1) return;
+      if (!word || !visible || document.hidden || typed < word.charStarts.length - 1) return;
       const now = performance.now();
       cursorOn = Math.floor((now - typeEndAt) / BLINK) % 2 === 0;
       render();
@@ -171,6 +170,15 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
       raf = requestAnimationFrame(tick);
     };
 
+    // develop only once the band is on screen *and* the photo is sampled; on a slow
+    // connection the image can land after the 1.4s reveal would already have finished
+    const maybeStart = () => {
+      if (started || !visible || !luma) return false;
+      started = true;
+      animateIn();
+      return true;
+    };
+
     const setup = async () => {
       const img = await loadImage(src).catch(() => null);
       if (!img || cancelled) return;
@@ -190,6 +198,7 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
         oy = Math.round(h * 0.42 - (gridRows * scale) / 2);
       }
       render();
+      maybeStart();
     };
 
     setup();
@@ -201,12 +210,7 @@ export default function DitherBand({ src, color, pixel = 3, focusY = 0.5, isDark
 
     const io = new IntersectionObserver(([e]) => {
       visible = e.isIntersecting;
-      if (visible && !started) {
-        started = true;
-        animateIn();
-      } else {
-        blink();
-      }
+      if (!maybeStart()) blink();
     }, { threshold: 0.25 });
     io.observe(canvas);
 

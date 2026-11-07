@@ -132,6 +132,3 @@ export function resolveColor(el: Element, cssColor: string, alpha = 1): [number,
   const k = rgb.startsWith('color(') ? 255 : 1;
   return [m[0] * k, m[1] * k, m[2] * k, Math.round((m[3] ?? 1) * alpha * 255)];
 }
-
-export const prefersReducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

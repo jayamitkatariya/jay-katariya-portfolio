@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { prefersReducedMotion } from '../lib/dither';
 
 // Same gate as the `cursor: none` rule in index.css, so the two never disagree.
 // A touchscreen laptop with a mouse still gets the custom cursor.
@@ -30,13 +29,10 @@ export default function CustomCursor() {
     const ring = ringRef.current;
     if (!dot || !ring) return;
 
-    document.documentElement.classList.add('custom-cursor-active');
-
     const s = { mouseX: -100, mouseY: -100, ringX: -100, ringY: -100, scale: 1, hovering: false, clicking: false, shown: false, label: '', lastLabel: '' };
     let frameId = 0;
     let running = false;
-    // reduced motion: the ring sits on the pointer instead of trailing behind it
-    const follow = prefersReducedMotion() ? 1 : 0.15;
+    const follow = 0.15;
 
     const frame = () => {
       dot.style.transform = `translate(${s.mouseX - 3}px, ${s.mouseY - 3}px)`;
@@ -73,9 +69,13 @@ export default function CustomCursor() {
       frameId = requestAnimationFrame(frame);
     };
 
+    // The native cursor is hidden only while the custom one is actually showing: until the
+    // first mouse move, and whenever a pen or finger takes over (Surface-type laptops), the
+    // system cursor stays, rather than there being no cursor at all.
     const show = (v: boolean) => {
       if (s.shown === v) return;
       s.shown = v;
+      document.documentElement.classList.toggle('custom-cursor-active', v);
       setVisible(v);
     };
 

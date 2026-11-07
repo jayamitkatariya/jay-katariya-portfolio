@@ -396,19 +396,6 @@ section[id] {
   outline: none;
 }
 
-/* Respect reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    /* or staggered reveals (pixel icons, loading tiles) still trickle in one by one */
-    transition-delay: 0s !important;
-  }
-}
 
 /* ── Writing: the paper tear ──
    Two clipped halves of the page paper. On open they peel away from the jagged

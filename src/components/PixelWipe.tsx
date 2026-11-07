@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
-import { prefersReducedMotion } from '../lib/dither';
 import { coverGrid } from '../lib/tileGrid';
 
 // Route-change transition: tiles pop in at random to cover the page, then pop
@@ -35,7 +34,7 @@ export default function PixelWipe() {
       return;
     }
     prevPath.current = pathname;
-    if (instant || prefersReducedMotion()) {
+    if (instant) {
       setPhase('idle');
       return;
     }

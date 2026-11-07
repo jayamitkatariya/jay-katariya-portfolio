@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback, useMemo, useContext } 
 import { motion, AnimatePresence, useIsPresent } from 'motion/react';
 import { Pause, Play, Shuffle, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AchievementContext } from '../hooks/useAchievements';
-import { prefersReducedMotion } from '../lib/dither';
 import DitheredPhoto from './DitheredPhoto';
 import PageHeader from './PageHeader';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
@@ -188,19 +187,18 @@ function preload(urls: string[]) {
 }
 
 /** One photo inside a tile: appears as a 1-bit print, then develops into color. */
-function PhotoLayer({ url, developDelay, still }: { url: string; developDelay: number; still: boolean }) {
-  const [printed, setPrinted] = useState(still);
-  const [developed, setDeveloped] = useState(still);
+function PhotoLayer({ url, developDelay }: { url: string; developDelay: number }) {
+  const [printed, setPrinted] = useState(false);
+  const [developed, setDeveloped] = useState(false);
   // once the colour is fully up, the print is invisible; unmount it so its canvas
   // and ResizeObserver stop re-dithering on every swap
-  const [gone, setGone] = useState(still);
+  const [gone, setGone] = useState(false);
 
   useEffect(() => {
-    if (still) return;
     // develop once the print is on screen; safety net if the image never loads
     const t = setTimeout(() => setDeveloped(true), printed ? developDelay : developDelay + 2500);
     return () => clearTimeout(t);
-  }, [printed, developDelay, still]);
+  }, [printed, developDelay]);
 
   useEffect(() => {
     if (!developed || gone) return;
@@ -238,11 +236,10 @@ function PhotoLayer({ url, developDelay, still }: { url: string; developDelay: n
 interface TileProps {
   item: { photoNum: number; x: number; y: number; w: number; h: number };
   enterDelay: number;
-  still: boolean;
   onOpen: (photoNum: number, rect: DOMRect, el: HTMLElement) => void;
 }
 
-function MemoryTile({ item, enterDelay, still, onOpen }: TileProps) {
+function MemoryTile({ item, enterDelay, onOpen }: TileProps) {
   const open = (el: HTMLElement) => onOpen(item.photoNum, el.getBoundingClientRect(), el);
   return (
     <motion.div
@@ -269,7 +266,7 @@ function MemoryTile({ item, enterDelay, still, onOpen }: TileProps) {
     >
       <div className="absolute inset-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.04]">
         <AnimatePresence initial={false}>
-          <PhotoLayer key={item.photoNum} url={tileSrc(item.photoNum, Math.max(item.w, item.h))} developDelay={enterDelay + 650} still={still} />
+          <PhotoLayer key={item.photoNum} url={tileSrc(item.photoNum, Math.max(item.w, item.h))} developDelay={enterDelay + 650} />
         </AnimatePresence>
       </div>
       <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -286,7 +283,6 @@ export default function MemoriesPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { w: cw, h: ch } = useContainerSize(containerRef);
   const achievementCtx = useContext(AchievementContext);
-  const [still] = useState(prefersReducedMotion);
 
   const { numRows, numTiles } = useMemo(
     () => (cw > 0 && ch > 0 ? computeGridParams(cw, ch, gap) : { numRows: 3, numTiles: 18 }),
@@ -349,7 +345,7 @@ export default function MemoriesPage() {
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
   }, []);
-  const playing = !still && !userPaused && !hovering && !focusInside && !tabHidden && lbPhoto === null;
+  const playing = !userPaused && !hovering && !focusInside && !tabHidden && lbPhoto === null;
 
   useEffect(() => {
     if (!playing) return;
@@ -369,7 +365,7 @@ export default function MemoriesPage() {
     }
   }, [packed.length]);
   const delayFor = (x: number, y: number) =>
-    entered.current || still ? 0 : Math.round(((x + y) / Math.max(1, cw + ch)) * 900);
+    entered.current ? 0 : Math.round(((x + y) / Math.max(1, cw + ch)) * 900);
 
   // ── Lightbox ──
   const [navDir, setNavDir] = useState(0);
@@ -460,7 +456,6 @@ export default function MemoriesPage() {
         icon="camera"
         className="shrink-0 w-full max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-20 sm:pt-24 md:pt-28 short:pt-16 pb-4 sm:pb-5 short:pb-2"
       >
-        {!still && (
           <div className="flex items-center gap-1 font-mono text-[11px] tracking-wider text-[var(--text-tertiary)]">
             <button
               type="button"
@@ -484,7 +479,6 @@ export default function MemoriesPage() {
               {photos.length} / {TOTAL}
             </span>
           </div>
-        )}
       </PageHeader>
 
       <div className="flex-1 min-h-0 w-full max-w-6xl xl:max-w-7xl mx-auto px-2 sm:px-6 md:px-8 pb-3 sm:pb-5">
@@ -504,7 +498,6 @@ export default function MemoriesPage() {
                 key={slot}
                 item={item}
                 enterDelay={delayFor(item.x, item.y)}
-                still={still}
                 onOpen={openLb}
               />
             ))}

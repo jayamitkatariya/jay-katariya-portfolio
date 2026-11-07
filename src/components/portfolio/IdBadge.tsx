@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { projects } from '../../data/projects';
 import { drawCardBack, drawCardFront, drawStrap, release } from './cardFace';
 import { ANCHOR_X, ANCHOR_Y, ATTACH_X, CAMERA, CARD, CLAMP, CLIP_Y, CRIMP, RING, VIEW_H, restCardY } from './badgeRig';
-import { prefersReducedMotion } from '../../lib/dither';
 import { onAppReady } from '../../lib/appReady';
 import ErrorBoundary from '../ErrorBoundary';
 import type { Entrance } from './IdBadge3D';
+import { probeGpu } from '../../lib/gpu';
 
 // Lazy so three.js / rapier only download on this route
 const load3D = () => import('./IdBadge3D');
@@ -18,21 +18,7 @@ const PLACEHOLDER_DELAY = 900;
 // lets the page's fade-in get going before the card drops
 const ENTRANCE_DELAY = 250;
 
-// Probe once and release the probe context — browsers cap live WebGL contexts,
-// and a leaked probe would evict the badge's real canvas.
-let webglSupport: boolean | null = null;
-function canUseWebGL() {
-  if (webglSupport !== null) return webglSupport;
-  try {
-    const c = document.createElement('canvas');
-    const gl = (c.getContext('webgl2') || c.getContext('webgl')) as WebGLRenderingContext | null;
-    gl?.getExtension('WEBGL_lose_context')?.loseContext();
-    webglSupport = !!gl;
-  } catch {
-    webglSupport = false;
-  }
-  return webglSupport;
-}
+const canUseWebGL = () => probeGpu().webgl;
 
 type Textures = { front: HTMLCanvasElement; back: HTMLCanvasElement; strap: HTMLCanvasElement };
 
@@ -126,7 +112,7 @@ export default function IdBadge({ className = '' }: { className?: string }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [textures, setTextures] = useState<Textures | null>(null);
   const [frontUrl, setFrontUrl] = useState<string | null>(null);
-  const [use3D, setUse3D] = useState(() => canUseWebGL() && !prefersReducedMotion() && !saveData());
+  const [use3D, setUse3D] = useState(() => canUseWebGL() && !saveData());
   const [near, setNear] = useState(false); // stage is on or near screen
   const [ready3D, setReady3D] = useState(false);
   const [placeholder, setPlaceholder] = useState(!use3D);
@@ -231,7 +217,7 @@ export default function IdBadge({ className = '' }: { className?: string }) {
 
   return (
     <div ref={stageRef} className={`relative select-none ${className}`}>
-      {/* Static badge: a placeholder while 3D loads slowly, or instead of it (no WebGL / reduced motion). */}
+      {/* Static badge: a placeholder while 3D loads slowly, or instead of it (no WebGL / data saver). */}
       <AnimatePresence>
         {placeholder && !ready3D && frontUrl && (
           <motion.div

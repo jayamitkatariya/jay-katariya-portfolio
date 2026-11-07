@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import PageHeader from './PageHeader';
 import { writingNotes } from '../data/writing';
-import { prefersReducedMotion } from '../lib/dither';
 import { safeDecode } from '../lib/safeDecode';
 
 // The index is only titles. Opening one tears the paper from the seam, away
@@ -81,10 +80,6 @@ export default function WritingPage() {
 
   const openArticle = (nextSlug: string) => {
     if (tear) return;
-    if (prefersReducedMotion()) {
-      navigate(`/writing/${nextSlug}`);
-      return;
-    }
     const origin = pathname;
     const cancel = () => {
       timers.current.forEach((timer) => window.clearTimeout(timer));

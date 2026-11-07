@@ -1,0 +1,45 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "dev-alt",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "--port=3100",
+        "--strictPort"
+      ],
+      "port": 3100,
+      "autoPort": false
+    },
+    {
+      "name": "dev-auto",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "npx vite --port ${PORT:-3200} --strictPort"
+      ],
+      "port": 3200,
+      "autoPort": true
+    },
+    {
+      "name": "prod-preview",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "npx vite preview --port ${PORT:-4173} --strictPort"
+      ],
+      "port": 4173,
+      "autoPort": true
+    }
+  ]
+}

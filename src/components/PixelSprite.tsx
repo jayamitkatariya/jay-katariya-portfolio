@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { prefersReducedMotion } from '../lib/dither';
 
 interface PixelSpriteProps {
   /** each frame is a grid of strings: `#` ink (currentColor), `o` accent, `.` empty */
@@ -13,7 +12,7 @@ interface PixelSpriteProps {
 }
 
 // Frame-by-frame pixel sprite, drawn as SVG rects like PixelIcon. Only ticks
-// while on screen, and holds frame 0 under prefers-reduced-motion.
+// while on screen.
 export default function PixelSprite({ frames, size, fps = 6, accent = '#f59e0b', className = '' }: PixelSpriteProps) {
   const ref = useRef<SVGSVGElement>(null);
   const [frame, setFrame] = useState(0);
@@ -42,7 +41,7 @@ export default function PixelSprite({ frames, size, fps = 6, accent = '#f59e0b',
   }, []);
 
   useEffect(() => {
-    if (!visible || prefersReducedMotion()) return;
+    if (!visible) return;
     const id = window.setInterval(() => setFrame(f => (f + 1) % frames.length), 1000 / fps);
     return () => window.clearInterval(id);
   }, [visible, fps, frames.length]);

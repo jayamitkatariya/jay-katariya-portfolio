@@ -14,6 +14,7 @@ import {
   type RapierRigidBody,
 } from '@react-three/rapier';
 import { MeshLineGeometry, MeshLineMaterial } from 'meshline';
+import { probeGpu } from '../../lib/gpu';
 import { CARD_H, CARD_W, SEAL, drawHolo, drawSealInk } from './cardFace';
 import {
   ANCHOR_X,
@@ -30,9 +31,10 @@ import {
   strapPoints,
 } from './badgeRig';
 
-// Phones / tablets: cheaper GPU settings (no MSAA, lower dpr, less anisotropy, no iridescence)
+// Phones / tablets / Intel iGPUs: cheaper GPU settings (no MSAA, lower dpr, less anisotropy, no iridescence)
 const LOW_POWER =
-  typeof window !== 'undefined' && (window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768);
+  typeof window !== 'undefined' &&
+  (window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768 || probeGpu().integrated);
 
 // Real-time 3D lanyard badge: rapier rope joints + meshline straps + a
 // rounded, clearcoated card with a live holographic seal.
@@ -506,7 +508,9 @@ export default function IdBadge3D({
         camera={{ position: [0, CAMERA.y, CAMERA.z], rotation: [0, 0, 0], fov: CAMERA.fov }} // explicit rotation: R3F would otherwise lookAt(0,0,0) and tilt the view
         dpr={LOW_POWER ? [1, 1.5] : [1, 2]}
         flat // no tone mapping: the printed card keeps its true ink/paper values
-        gl={{ alpha: true, antialias: !LOW_POWER }}
+        // 'default', not R3F's 'high-performance': on dual-GPU laptops that forces a GPU
+        // switch, which on macOS can drop the context and leave the static badge for good
+        gl={{ alpha: true, antialias: !LOW_POWER, powerPreference: 'default' }}
         frameloop={running ? 'always' : 'demand'}
         onCreated={({ gl }) => {
           glCanvas.current = gl.domElement;

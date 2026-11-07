@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 import { ArrowUpRight, Download } from 'lucide-react';
 import PageHeader from './PageHeader';
 import SectionHeading, { type SpriteName } from './SectionHeading';
-import { prefersReducedMotion } from '../lib/dither';
 import {
   RESUME_URL, RESUME_FILENAME, RESUME_UPDATED as UPDATED,
   education, experience, recognition, skills, resumeProjects, type ResumeEntry as Entry,
@@ -22,7 +21,7 @@ const SECTIONS: { id: string; label: string; icon: SpriteName }[] = [
 function jumpToSection(id: string) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  el.scrollIntoView({ behavior: 'smooth' });
   // move focus with the view, so the next Tab continues from the section rather than the rail
   el.focus({ preventScroll: true });
   window.history.replaceState(window.history.state, '', `#${id}`);

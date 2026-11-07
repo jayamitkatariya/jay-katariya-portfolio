@@ -15,7 +15,15 @@ const AC = (): AnyAudioContext | undefined =>
     ? undefined
     : window.AudioContext ?? (window as unknown as { webkitAudioContext?: AnyAudioContext }).webkitAudioContext;
 
+// Safari also parks a context in 'interrupted' (after sleep, or when another app takes the
+// audio device), and a 'closed' one can never play again; treat both like 'suspended'.
+const needsResume = (c: AudioContext) => c.state !== 'running' && c.state !== 'closed';
+
 function ensure(): AudioContext | null {
+  if (ctx && ctx.state === 'closed') {
+    ctx = null;
+    master = null;
+  }
   if (ctx) return ctx;
   const Ctor = AC();
   if (!Ctor) return null;
@@ -38,7 +46,7 @@ function ensure(): AudioContext | null {
 export function unlock() {
   if (!enabled) return;
   const c = ensure();
-  if (c && c.state === 'suspended') c.resume().catch(() => {});
+  if (c && needsResume(c)) c.resume().catch(() => {});
 }
 
 export function setEnabled(on: boolean) {
@@ -57,7 +65,7 @@ export function suspend() {
 
 /** back on the tab: resume only a context that a gesture already started */
 export function wake() {
-  if (enabled && ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+  if (enabled && ctx && needsResume(ctx)) ctx.resume().catch(() => {});
 }
 
 export interface PlayOptions {

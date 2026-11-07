@@ -26,6 +26,8 @@ export default function Filmstrip() {
   const toggle = (n: number) => setDeveloped((d) => (d === n ? null : n));
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // reset for every pointer, or a finger tap after a mouse drag reads as "dragged" and is ignored
+    drag.current.moved = false;
     if (e.pointerType !== 'mouse') return;
     const el = strip.current;
     if (!el) return;
@@ -36,6 +38,9 @@ export default function Filmstrip() {
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!drag.current.down) return;
+    // released outside the strip before the drag captured the pointer: the pointerup
+    // never reached us, so end it here instead of scrolling on plain hover
+    if (e.buttons === 0) return endDrag(e);
     const el = strip.current;
     if (!el) return;
     const dx = e.clientX - drag.current.startX;
@@ -88,6 +93,7 @@ export default function Filmstrip() {
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
+          onLostPointerCapture={endDrag}
           className="filmstrip flex cursor-grab snap-x snap-mandatory items-start gap-3 overflow-x-auto pb-8 pt-5 active:cursor-grabbing sm:gap-5"
         >
           {filmstripPhotos.map((photo, i) => (

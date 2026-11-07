@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { PixelIcon } from './SectionHeading';
-import { prefersReducedMotion } from '../lib/dither';
 
 // only the most recent transition may switch colour transitions back on
 let switchToken = 0;
@@ -18,7 +17,7 @@ export default function DarkModeToggle({ isDark, onToggle }: DarkModeToggleProps
     const supportsViewTransition = typeof document !== 'undefined' && 'startViewTransition' in document;
 
     // a hidden tab can't run the transition; it would just reject
-    if (!supportsViewTransition || document.hidden || prefersReducedMotion()) {
+    if (!supportsViewTransition || document.hidden) {
       onToggle();
       return;
     }

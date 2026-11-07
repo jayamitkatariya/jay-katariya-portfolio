@@ -23,7 +23,10 @@ export function useKeyboardShortcuts(actions: ShortcutActions, enabled = true) {
     const modal = document.querySelector('[aria-modal="true"]');
     if (modal && e.key !== 'Escape' && !(e.key === '?' && modal.hasAttribute('data-shortcuts-help'))) return;
 
-    switch (e.key) {
+    // page keys by physical position too: on AZERTY and similar layouts the unshifted
+    // number row types &, é, " … so e.key alone never sees 1–5
+    const key = /^Digit[1-5]$/.test(e.code) && !e.shiftKey ? e.code.slice(5) : e.key;
+    switch (key) {
       case '1':
         actions.setPage('home');
         actions.onShortcutUsed?.();

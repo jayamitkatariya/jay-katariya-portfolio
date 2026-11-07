@@ -1,6 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { usePresence } from 'motion/react';
-import { bayerAt, prefersReducedMotion } from '../lib/dither';
+import { bayerAt } from '../lib/dither';
 import { coverGrid } from '../lib/tileGrid';
 import LoaderBadge from './LoaderBadge';
 
@@ -27,7 +27,6 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
   const stableOnComplete = useCallback(onComplete, []);
   const completedRef = useRef(false);
   const [isPresent, safeToRemove] = usePresence();
-  const [reduced] = useState(prefersReducedMotion);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // cell order for the dissolve, filled in when the cover is painted
   const cellsRef = useRef<{ cols: number; order: Uint32Array; thresholds: Float32Array; dpr: number } | null>(null);
@@ -74,13 +73,6 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
 
   // Type the greeting, hold a beat, then hand over to the page
   useEffect(() => {
-    if (reduced) {
-      setTyped(GREETING.length);
-      // long enough to actually see the badge
-      const timer = setTimeout(finish, 700);
-      return () => clearTimeout(timer);
-    }
-
     let raf = 0;
     let startTime: number | null = null;
     const tick = (now: number) => {
@@ -101,7 +93,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
       cancelAnimationFrame(raf);
       clearTimeout(fallback);
     };
-  }, [finish, reduced]);
+  }, [finish]);
 
   // Exit: eat the cover away cell by cell, in threshold order
   useEffect(() => {
@@ -109,7 +101,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     const cells = cellsRef.current;
-    if (!canvas || !ctx || !cells || prefersReducedMotion()) {
+    if (!canvas || !ctx || !cells) {
       safeToRemove?.();
       return;
     }
@@ -159,7 +151,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
 
       {/* outside the fading layer: it leaves by being yanked up, over the dissolve */}
       <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
-        <LoaderBadge present={isPresent} reduced={reduced} />
+        <LoaderBadge present={isPresent} />
       </div>
 
       {/* hidden from the live region, or screen readers read out every typed frame */}

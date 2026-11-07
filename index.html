@@ -89,10 +89,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/PPNeueBit-Bold.woff2" crossorigin />
+    <!-- Non-blocking: on networks where Google Fonts is slow or filtered (schools, offices,
+         some VPNs) a plain stylesheet link holds the whole page blank until it times out.
+         Text paints in the fallback stack and swaps when the fonts arrive. -->
     <link
-      rel="stylesheet"
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      />
+    </noscript>
   </head>
   <body>
     <div id="root"></div>

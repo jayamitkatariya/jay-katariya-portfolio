@@ -36,14 +36,33 @@ const PANEL_Y = 1064; // top of the ink panel
 const mono = (size: number, weight = 400) => `${weight} ${size}px "JetBrains Mono", monospace`;
 const sans = (size: number, weight = 500) => `${weight} ${size}px Inter, sans-serif`;
 
+// Never let a stalled request (filtered network, hung CDN) leave the badge blank:
+// past the deadline the card draws with whatever has arrived.
+const within = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
+  Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
+
+// Inter / JetBrains Mono come from a non-blocking stylesheet (index.html). Until it has
+// applied, their @font-face rules don't exist and fonts.load() resolves at once with
+// nothing, so the card would bake in the fallback fonts for good. Wait for it first.
+function fontCssApplied(): Promise<void> {
+  const applied = () =>
+    Array.from(document.styleSheets).some((sheet) => sheet.href?.includes('fonts.googleapis.com'));
+  if (applied()) return Promise.resolve();
+  return new Promise((resolve) => {
+    const poll = () => (applied() ? resolve() : setTimeout(poll, 50));
+    poll();
+  });
+}
+
 async function fontsReady() {
   try {
-    await Promise.all([
+    await within(fontCssApplied(), 3000, undefined);
+    await within(Promise.all([
       document.fonts.load(sans(120)),
       document.fonts.load(sans(40, 400)),
       document.fonts.load(mono(30)),
       document.fonts.load(mono(30, 500)),
-    ]);
+    ]).then(() => undefined), 3000, undefined);
   } catch {
     /* fall back to system fonts */
   }
@@ -208,7 +227,7 @@ export function drawSealInk(size = 256): HTMLCanvasElement {
 }
 
 export async function drawCardFront(projectCount: number): Promise<HTMLCanvasElement> {
-  const [, photo] = await Promise.all([fontsReady(), loadImage('/idpic.jpg')]);
+  const [, photo] = await Promise.all([fontsReady(), within(loadImage('/idpic.jpg'), 4000, null)]);
   const [c, g] = canvas(CARD_W, CARD_H);
 
   g.fillStyle = PAPER;

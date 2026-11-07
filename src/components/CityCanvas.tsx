@@ -748,6 +748,18 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
     // the first frame is painted straight away, but the loop waits until the loading
     // screen is gone so it doesn't burn frames underneath it
     let appReady = false;
+    // Weak, integrated or software-rendered GPUs can't hold a full-res repaint every
+    // frame; below ~20fps the dt clamp turns that into slow motion. Start at a 1.5x
+    // backing store and ≤60fps; if frames keep arriving slowly, drop to 1x and 30fps.
+    let lowPower = false;
+    let frameEma = 16;
+    let slowFrames = 0;
+    const maxDpr = () => (lowPower ? 1 : 1.5);
+    const minFrameMs = () => (lowPower ? 31 : 14);
+    // sky gradient + glow, painted once per palette/size instead of every frame
+    const skyLayer = document.createElement('canvas');
+    const skyCtx = skyLayer.getContext('2d');
+    let skyKey = '';
 
 
     const pixel = (x: number, y: number, pw = 1, phh = 1, color = '#fff', alpha = 1) => {
@@ -854,19 +866,36 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       const t = s.time;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
-
-      const sky = ctx.createLinearGradient(0, 0, 0, h);
-      sky.addColorStop(0, p.skyTop);
-      sky.addColorStop(1, p.skyBottom);
       ctx.globalAlpha = 1;
-      ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, w, h);
 
-      const glow = ctx.createRadialGradient(w * 0.5, h * 0.7, 0, w * 0.5, h * 0.7, w * 0.62);
-      glow.addColorStop(0, p.glow);
-      glow.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, w, h);
+      const paintSky = (g: CanvasRenderingContext2D) => {
+        const sky = g.createLinearGradient(0, 0, 0, h);
+        sky.addColorStop(0, p.skyTop);
+        sky.addColorStop(1, p.skyBottom);
+        g.fillStyle = sky;
+        g.fillRect(0, 0, w, h);
+        const glow = g.createRadialGradient(w * 0.5, h * 0.7, 0, w * 0.5, h * 0.7, w * 0.62);
+        glow.addColorStop(0, p.glow);
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = glow;
+        g.fillRect(0, 0, w, h);
+      };
+      if (skyCtx && eased >= 1) {
+        const key = `${p.skyTop}|${p.skyBottom}|${p.glow}|${w}x${h}@${dpr}`;
+        if (key !== skyKey) {
+          skyKey = key;
+          skyLayer.width = Math.round(w * dpr);
+          skyLayer.height = Math.round(h * dpr);
+          skyCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          paintSky(skyCtx);
+        }
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.drawImage(skyLayer, 0, 0);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      } else {
+        // mid-transition the palette changes every frame; caching would only add a copy
+        paintSky(ctx);
+      }
 
       // stars — sub-cell dots keep the sky quiet
       for (const st of s.stars) {
@@ -946,7 +975,7 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
           base = c.x - c.range + prog * 2 * c.range;
           // ~3.5s to form and to dissolve, whatever the corridor length
           const fade = Math.min(0.3, 3.5 / cycle);
-          // a paused sky (or reduced motion) never freezes a cloud half-formed
+          // a paused sky never freezes a cloud half-formed
           vis = pausedRef.current ? 1 : Math.min(1, prog / fade, (1 - prog) / fade);
         } else {
           base = c.x + Math.sin(t * 0.35 + c.phase * 6.28) * c.range;
@@ -1324,11 +1353,32 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
 
     const frame = (now: number) => {
       if (!running) return;
+      const gap = now - last;
+      // 120/144Hz panels would otherwise do 2–3x the work for no visible gain
+      if (gap < minFrameMs()) {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
       // the first rAF timestamp can predate start()'s performance.now(); never step backwards
-      const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
+      const dt = Math.max(0, Math.min(0.05, gap / 1000));
       last = now;
       step(dt);
       draw();
+      // sustained slow frames (not one hitch, not a throttled tab) → lighter rendering
+      if (!lowPower && gap > 0 && gap < 250) {
+        frameEma = frameEma * 0.9 + gap * 0.1;
+        slowFrames = frameEma > 28 ? slowFrames + 1 : 0;
+        if (slowFrames > 45) {
+          lowPower = true;
+          // backing store only: the scene is laid out in css pixels, so nothing re-seeds
+          if (dpr > 1) {
+            dpr = 1;
+            canvas.width = w;
+            canvas.height = h;
+            skyKey = '';
+          }
+        }
+      }
       if (running) raf = requestAnimationFrame(frame);
     };
 
@@ -1336,6 +1386,8 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       if (running || !appReady || !scene || pausedRef.current || !inView || document.hidden) return;
       running = true;
       last = performance.now();
+      frameEma = 16;
+      slowFrames = 0;
       raf = requestAnimationFrame(frame);
     };
     const stop = () => {
@@ -1432,7 +1484,7 @@ export default forwardRef<CityHandle, CityCanvasProps>(function CityCanvas(
       const rect = canvas.getBoundingClientRect();
       const nw = Math.max(1, Math.round(rect.width));
       const nh = Math.max(1, Math.round(rect.height));
-      const ndpr = Math.min(window.devicePixelRatio || 1, 2);
+      const ndpr = Math.min(window.devicePixelRatio || 1, maxDpr());
       if (nw === w && nh === h && ndpr === dpr && scene) return;
       w = nw;
       h = nh;

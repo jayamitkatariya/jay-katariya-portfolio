@@ -34,7 +34,13 @@ export default function DitheredPhoto({ src, className = '', pixel = 1.6, focusY
       if (key === last) return;
       last = key;
       const img = await loadImage(src).catch(() => null);
-      if (!img || cancelled) return;
+      if (cancelled) return;
+      if (!img) {
+        // let the next resize try again, and don't hold the caller's develop step hostage
+        last = '';
+        onReadyRef.current?.();
+        return;
+      }
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext('2d');

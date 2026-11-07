@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { ArrowUpRight, Plus } from 'lucide-react';
 import type { Project } from '../../data/projects';
 import CategoryFilter, { type Category } from './CategoryFilter';
@@ -42,7 +42,6 @@ interface ProjectListProps {
 export default function ProjectList({ projects, activeCategory, onChange, counts, total }: ProjectListProps) {
   const [open, setOpen] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const reduceMotion = useReducedMotion();
   const { hash } = useLocation();
 
   // links like /portfolio#workro-recruit land with that project already open. Keyed on
@@ -223,10 +222,10 @@ export default function ProjectList({ projects, activeCategory, onChange, counts
                             {isPreview && project.preview && (
                               <motion.figure
                                 key="preview"
-                                initial={reduceMotion ? false : { height: 0, opacity: 0 }}
+                                initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
-                                exit={reduceMotion ? { opacity: 0 } : { height: 0, opacity: 0, transition: { duration: 0.18, ease: EASE_EXIT } }}
-                                transition={reduceMotion ? { duration: 0 } : { duration: 0.28, ease: EASE }}
+                                exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: EASE_EXIT } }}
+                                transition={{ duration: 0.28, ease: EASE }}
                                 className="m-0 overflow-hidden"
                               >
                                 <div className="pt-1">
@@ -234,17 +233,7 @@ export default function ProjectList({ projects, activeCategory, onChange, counts
                                     className="relative w-full overflow-hidden rounded-lg border border-[var(--border-primary)] bg-[var(--bg-tertiary)]"
                                     style={{ aspectRatio: '16 / 10' }}
                                   >
-                                    {reduceMotion ? (
-                                      <img
-                                        src={project.preview.poster}
-                                        alt={project.preview.alt}
-                                        width={1280}
-                                        height={800}
-                                        loading="lazy"
-                                        className="absolute inset-0 h-full w-full object-cover"
-                                      />
-                                    ) : (
-                                      <>
+                                    <>
                                         <img
                                           src={project.preview.placeholder}
                                           alt=""
@@ -263,15 +252,14 @@ export default function ProjectList({ projects, activeCategory, onChange, counts
                                           className="absolute inset-0 h-full w-full object-cover"
                                         />
                                         <PreviewGif src={project.preview.gif} alt={project.preview.alt} />
-                                      </>
-                                    )}
+                                    </>
                                   </div>
                                   <figcaption className="mt-2 flex items-baseline justify-between gap-4 font-mono text-[8.5px] tracking-[0.14em] text-[var(--text-tertiary)] sm:text-[9px]">
                                     <span>
-                                      {project.name} · {reduceMotion ? 'still' : 'screen recording'}
+                                      {project.name} · screen recording
                                     </span>
                                     <span className="text-[var(--text-tertiary)]">
-                                      {reduceMotion ? 'reduced motion' : 'loops'}
+                                      loops
                                     </span>
                                   </figcaption>
                                 </div>

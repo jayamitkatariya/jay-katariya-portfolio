@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bird, Pause, Play } from 'lucide-react';
 import CityCanvas, { type CityHandle } from './CityCanvas';
-import { prefersReducedMotion } from '../lib/dither';
 
 const LAFAYETTE = 'America/Indiana/Indianapolis';
 const PUNE = 'Asia/Kolkata';
@@ -48,7 +47,7 @@ function useLiveStatus() {
 }
 
 export default function HeroCity({ isDark }: { isDark: boolean }) {
-  const [paused, setPaused] = useState(() => prefersReducedMotion());
+  const [paused, setPaused] = useState(false);
   const [birds, setBirds] = useState(3);
   const cityRef = useRef<CityHandle>(null);
   const textRef = useRef<HTMLDivElement>(null);
@@ -80,7 +79,7 @@ export default function HeroCity({ isDark }: { isDark: boolean }) {
         </div>
 
         <div className="relative z-20 flex flex-wrap items-end justify-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:justify-between sm:px-6 sm:pb-5">
-          <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-[var(--border-primary)]/80 bg-[var(--bg-primary)]/70 px-3 py-1.5 font-mono text-[8.5px] tracking-widest text-[var(--text-secondary)] backdrop-blur-sm sm:text-[9px]">
+          <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-[var(--border-primary)]/80 bg-[var(--bg-primary)]/85 px-3 py-1.5 font-mono text-[8.5px] tracking-widest text-[var(--text-secondary)] sm:text-[9px]">
             <span className="h-1 w-1 shrink-0 rounded-full bg-[var(--accent)] animate-pixel-blink" />
             <span>
               {status.greeting} · lafayette {status.lafayette}
@@ -93,7 +92,7 @@ export default function HeroCity({ isDark }: { isDark: boolean }) {
           <button
             type="button"
             onClick={() => setPaused((p) => !p)}
-            className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-[var(--border-primary)]/80 bg-[var(--bg-primary)]/70 text-[var(--text-secondary)] backdrop-blur-sm transition-[color,scale] duration-150 ease-out active:scale-[0.96] sm:hidden"
+            className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-[var(--border-primary)]/80 bg-[var(--bg-primary)]/85 text-[var(--text-secondary)] transition-[color,scale] duration-150 ease-out active:scale-[0.96] sm:hidden"
             aria-label={paused ? 'animate the city' : 'pause the city'}
             aria-pressed={paused}
             data-sound={paused ? 'toggleOn' : 'toggleOff'}
@@ -101,7 +100,7 @@ export default function HeroCity({ isDark }: { isDark: boolean }) {
             {paused ? <Play size={10} strokeWidth={1.8} /> : <Pause size={10} strokeWidth={1.8} />}
           </button>
 
-          <div className="pointer-events-auto hidden items-center gap-0.5 rounded-full border border-[var(--border-primary)]/80 bg-[var(--bg-primary)]/70 p-0.5 font-mono text-[8.5px] tracking-widest text-[var(--text-secondary)] backdrop-blur-sm sm:flex sm:text-[9px]">
+          <div className="pointer-events-auto hidden items-center gap-0.5 rounded-full border border-[var(--border-primary)]/80 bg-[var(--bg-primary)]/85 p-0.5 font-mono text-[8.5px] tracking-widest text-[var(--text-secondary)] sm:flex sm:text-[9px]">
             <button
               type="button"
               onClick={() => cityRef.current?.sendBird()}

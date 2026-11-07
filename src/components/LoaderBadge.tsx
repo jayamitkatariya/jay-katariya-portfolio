@@ -216,9 +216,8 @@ const TWIST: Variants = {
   hang: { transform: 'rotateY(0deg)', transition: { type: 'spring', visualDuration: 0.6, bounce: 0.25, delay: DELAY } },
   gone: { transform: 'rotateY(0deg)' }, // stays face-on while it's yanked out
 };
-const FADE: Variants = { hang: { opacity: 1 }, gone: { opacity: 0, transition: { duration: 0.2 } } };
 
-function LoaderBadge({ present, reduced }: { present: boolean; reduced: boolean }) {
+function LoaderBadge({ present }: { present: boolean }) {
   // Drop: falls a full screen, catches on the strap, and on the way out is yanked back up after
   // a short tug down. A screen's height clears the card at any size.
   const [drop] = useState<Variants>(() => {
@@ -235,12 +234,12 @@ function LoaderBadge({ present, reduced }: { present: boolean; reduced: boolean 
 
   return (
     <motion.div
-      className={`loader-badge ${reduced ? '' : 'loader-badge--motion'}`}
-      variants={reduced ? FADE : SWING}
-      initial={reduced ? false : 'drop'}
+      className="loader-badge loader-badge--motion"
+      variants={SWING}
+      initial="drop"
       animate={present ? 'hang' : 'gone'}
     >
-      <motion.div className="loader-badge__drop" variants={reduced ? undefined : drop}>
+      <motion.div className="loader-badge__drop" variants={drop}>
         {([-1, 1] as const).map(side => (
           <div key={side} className="loader-strap" style={{ left: `calc(50% + var(--u) * ${side * 0.05})`, rotate: `${side * 27}deg` }}>
             <span>{STRAP_TEXT}</span>
@@ -268,7 +267,7 @@ function LoaderBadge({ present, reduced }: { present: boolean; reduced: boolean 
         </svg>
 
         <div className="absolute inset-0" style={{ perspective: 'calc(var(--cw) * 6)' }}>
-          <motion.div variants={reduced ? undefined : TWIST} className="relative w-full h-full">
+          <motion.div variants={TWIST} className="relative w-full h-full">
             <div className="loader-face">
               <FrontFace />
               <Seal />

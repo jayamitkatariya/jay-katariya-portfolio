@@ -329,7 +329,7 @@ export default function App() {
 
   if (isAgent) {
     return (
-      <MotionConfig reducedMotion="user">
+      <MotionConfig reducedMotion="never">
       <AchievementContext.Provider value={achievements}>
       <SoundEffects />
       <div className="min-h-screen bg-[var(--bg-primary)]">
@@ -342,7 +342,7 @@ export default function App() {
   }
 
   return (
-    <MotionConfig reducedMotion="user">
+    <MotionConfig reducedMotion="never">
     <AchievementContext.Provider value={achievements}>
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
       <SoundEffects />
